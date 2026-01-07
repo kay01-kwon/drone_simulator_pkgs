@@ -1,0 +1,6 @@
+/**:
+  ros__parameters:
+    motor:
+      uav_type: "HEXA"
+      time_const_up: 0.01
+      time_const_down: 0.01

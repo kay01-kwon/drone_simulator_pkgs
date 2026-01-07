@@ -1,0 +1,894 @@
+<?xml version="1.0"?>
+<sdf version="1.8">
+  <model name="S550">
+    <!-- Initial pose -->
+    <pose>0 0 0 0 0 0</pose>
+
+    <!-- Body link -->
+    <link name="S550/base_link">
+      <pose>0 0 0 0 0 0</pose>
+      <inertial>
+        <!-- Center of mass -->
+        <pose>0.02 0.03 0 0 0 0</pose>
+        <mass>2.940</mass>
+        <inertia>
+          <ixx>0.060</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.060</iyy>
+          <iyz>0</iyz>
+          <izz>0.080</izz>
+        </inertia>
+      </inertial>
+			<collision name="S550/base_link_collision">
+				<pose>0 0 0 0 0 0</pose>
+				<geometry>
+					<box>
+						<size>0.80 0.80 0.545</size>
+					</box>
+				</geometry>
+			</collision>
+			<visual name="S550/base_link_visual">
+				<pose>0 0 0 0 0 0</pose>
+				<geometry>
+					<mesh>
+						<scale>1 1 1</scale>
+						<uri>package://drone_description/models/S550/meshes/S550.dae</uri>
+					</mesh>
+				</geometry>
+			</visual>
+      <sensor name="imu_sensor" type="imu">
+        <always_on>1</always_on>
+        <topic>S550/imu</topic>
+        <update_rate>200.0</update_rate>
+        <imu>
+          <angular_velocity>
+            <x>
+              <noise type="gaussian">
+                <mean>0.0</mean>
+                <stddev>6.63e-4</stddev>
+                <bias_mean>0.0</bias_mean>
+                <bias_stddev>0.0</bias_stddev>
+                <dynamic_bias_stddev>1.5e-4</dynamic_bias_stddev>
+                <bias_correlation_time>3000.0</bias_correlation_time>
+              </noise>
+            </x>
+            <y>
+              <noise type="gaussian">
+                <mean>0.0</mean>
+                <stddev>6.63e-4</stddev>
+                <bias_mean>0.0</bias_mean>
+                <bias_stddev>0.0</bias_stddev>
+                <dynamic_bias_stddev>1.5e-4</dynamic_bias_stddev>
+                <bias_correlation_time>3000.0</bias_correlation_time>
+              </noise>
+            </y>
+            <z>
+              <noise type="gaussian">
+                <mean>0.0</mean>
+                <stddev>6.63e-4</stddev>
+                <bias_mean>0.0</bias_mean>
+                <bias_stddev>0.0</bias_stddev>
+                <dynamic_bias_stddev>1.5e-4</dynamic_bias_stddev>
+                <bias_correlation_time>3000.0</bias_correlation_time>
+              </noise>
+            </z>
+          </angular_velocity>
+          <linear_acceleration>
+            <x>
+              <noise type="gaussian">
+                <mean>0.0</mean>
+                <stddev>6.86e-3</stddev>
+                <bias_mean>0.0</bias_mean>
+                <bias_stddev>0.0</bias_stddev>
+                <dynamic_bias_stddev>8.0e-3</dynamic_bias_stddev>
+                <bias_correlation_time>3000.0</bias_correlation_time>
+              </noise>
+            </x>
+            <y>
+              <noise type="gaussian">
+                <mean>0.0</mean>
+                <stddev>6.86e-3</stddev>
+                <bias_mean>0.0</bias_mean>
+                <bias_stddev>0.0</bias_stddev>
+                <dynamic_bias_stddev>8.0e-3</dynamic_bias_stddev>
+                <bias_correlation_time>3000.0</bias_correlation_time>
+              </noise>
+            </y>
+            <z>
+              <noise type="gaussian">
+                <mean>0.0</mean>
+                <stddev>6.86e-3</stddev>
+                <bias_mean>0.0</bias_mean>
+                <bias_stddev>0.0</bias_stddev>
+                <dynamic_bias_stddev>8.0e-3</dynamic_bias_stddev>
+                <bias_correlation_time>3000.0</bias_correlation_time>
+              </noise>
+            </z>
+          </linear_acceleration>
+        </imu>
+        <always_on>true</always_on>
+        <visualize>false</visualize>
+      </sensor>
+		</link>
+
+    <!-- Camera link -->
+    <link name="bottom_screw_frame">
+      <pose relative_to="S550/base_link">
+        0.046 0 -0.088 
+        0 0.52359877559 0
+      </pose>
+      <inertial>
+        <pose>0 0 0 0 0 0</pose>
+        <mass>1e-10</mass>
+        <inertia>
+          <ixx>1e-10</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>1e-10</iyy>
+          <iyz>0</iyz>
+          <izz>1e-10</izz>
+        </inertia>
+      </inertial>
+    </link>
+    
+    <link name="camera_link">
+      <pose relative_to="bottom_screw_frame">
+        0 0.0175 0.0125 
+        0 0 0
+      </pose>
+      <inertial>
+        <pose>0 0 0 0 0 0</pose>
+        <mass>1e-10</mass>
+        <inertia>
+          <ixx>1e-10</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>1e-10</iyy>
+          <iyz>0</iyz>
+          <izz>1e-10</izz>
+        </inertia>
+      </inertial>
+      <collision name="camera_collision">
+        <pose>0 0 0 
+              0 0 0
+        </pose>
+        <geometry>
+          <box>
+            <size>0.090 0.025 0.025</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name="camera_visual">
+        <pose relative_to="camera_link">
+          0.0149 -0.0175 0
+          1.57079632679 0 1.57079632679
+        </pose>
+        <geometry>
+          <mesh>
+            <scale>1 1 1</scale>
+            <uri>package://drone_description/models/S550/meshes/d435.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+
+    <link name="camera_ir_frame">
+      <pose relative_to="camera_link">
+        0 0 0
+        0 0 0
+      </pose>
+      <inertial>
+        <pose>0 0 0 0 0 0</pose>
+        <mass>1e-10</mass>
+        <inertia>
+          <ixx>1e-10</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>1e-10</iyy>
+          <iyz>0</iyz>
+          <izz>1e-10</izz>
+        </inertia>
+      </inertial>
+    </link>
+
+    <link name="camera_ir_optical_frame">
+      <pose relative_to="camera_ir_frame">
+        0 0 0
+        -1.57079632679 0 -1.57079632679
+      </pose>
+      <inertial>
+        <pose>0 0 0 0 0 0</pose>
+        <mass>1e-10</mass>
+        <inertia>
+          <ixx>1e-10</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>1e-10</iyy>
+          <iyz>0</iyz>
+          <izz>1e-10</izz>
+        </inertia>
+      </inertial>
+      <!-- Left IR Camera -->
+      <sensor name="camera_left_ir_sensor" type="camera">
+        <pose relative_to="camera_ir_frame">
+          0 0 0 
+          0 0 0
+        </pose>
+        <topic>camera/infra1/image_rect_raw</topic>
+        <always_on>true</always_on>
+        <update_rate>30</update_rate>
+        <visualize>false</visualize>
+        <enable_metrics>false</enable_metrics>
+        <camera>
+          <horizontal_fov>1.3742478184</horizontal_fov>
+          <image>
+            <width>640</width>
+            <height>480</height>
+            <format>L_INT8</format>
+          </image>
+          <clip>
+            <near>0.1</near>
+            <far>10</far>
+          </clip>
+          <noise>
+            <type>gaussian</type>
+            <mean>0.0</mean>
+            <stddev>0.007</stddev>
+          </noise>
+          <distortion>
+            <k1>0.0</k1>
+            <k2>0.0</k2>
+            <k3>0.0</k3>
+            <p1>0.0</p1>
+            <p2>0.0</p2>
+          </distortion>
+        </camera>
+      </sensor>
+      <!-- Right IR Camera -->
+      <sensor name="camera_right_ir_sensor" type="camera">
+        <pose relative_to="camera_ir_frame">
+          0 -0.050 0
+          0 0 0
+        </pose>
+        <topic>camera/infra2/image_rect_raw</topic>
+        <always_on>true</always_on>
+        <update_rate>30</update_rate>
+        <visualize>false</visualize>
+        <enable_metrics>false</enable_metrics>
+        <camera>
+          <horizontal_fov>1.3742478184</horizontal_fov>
+          <image>
+            <width>640</width>
+            <height>480</height>
+            <format>L_INT8</format>
+          </image>
+          <clip>
+            <near>0.1</near>
+            <far>10</far>
+          </clip>
+          <noise>
+            <type>gaussian</type>
+            <mean>0.0</mean>
+            <stddev>0.007</stddev>
+          </noise>
+          <distortion>
+            <k1>0.0</k1>
+            <k2>0.0</k2>
+            <k3>0.0</k3>
+            <p1>0.0</p1>
+            <p2>0.0</p2>
+          </distortion>
+        </camera>
+      </sensor>
+    </link>
+
+    <link name="camera_depth_frame">
+      <pose relative_to="camera_link">
+        0.015 0 0
+        0 0 0
+      </pose>
+      <inertial>
+        <pose>0 0 0 0 0 0</pose>
+        <mass>1e-10</mass>
+        <inertia>
+          <ixx>1e-10</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>1e-10</iyy>
+          <iyz>0</iyz>
+          <izz>1e-10</izz>
+        </inertia>
+      </inertial>
+    </link>
+
+    <link name="camera_depth_optical_frame">
+      <pose relative_to="camera_depth_frame">
+        0 0 0
+        -1.57079632679 0 -1.57079632679
+      </pose>
+      <inertial>
+        <pose>0 0 0 0 0 0</pose>
+        <mass>1e-10</mass>
+        <inertia>
+          <ixx>1e-10</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>1e-10</iyy>
+          <iyz>0</iyz>
+          <izz>1e-10</izz>
+        </inertia>
+      </inertial>
+      <!-- <sensor name="depth_camera" type="depth_camera">
+        <pose relative_to="camera_depth_frame">
+          0 0 0
+          0 0 0
+        </pose>
+        <update_rate>15</update_rate>
+        <visualize>false</visualize>
+        <topic>camera/depth/image_rect_raw</topic>
+        <always_on>true</always_on>
+        <enable_metrics>false</enable_metrics>
+        <camera>
+          <horizontal_fov>1.51844</horizontal_fov>
+          <image>
+            <width>640</width>
+            <height>480</height>
+            <format>R_FLOAT32</format>
+          </image>
+          <clip>
+            <near>0.01</near>
+            <far>10</far>
+          </clip>
+          <noise>
+            <type>gaussian</type>
+            <mean>0.0</mean>
+            <stddev>0.007</stddev>
+          </noise>
+        </camera>
+        <ignition_frame_id>camera_depth_optical_frame</ignition_frame_id>
+      </sensor> -->
+    </link>
+
+    <!-- Camera joint -->
+    <joint name="bottom_screw_frame_joint" type="fixed">
+      <parent>S550/base_link</parent>
+      <child>bottom_screw_frame</child>
+    </joint>
+
+    <joint name="camera_link_joint" type="fixed">
+      <parent>bottom_screw_frame</parent>
+      <child>camera_link</child>
+    </joint>
+
+    <joint name="camera_ir_frame_joint" type="fixed">
+      <parent>camera_link</parent>
+      <child>camera_ir_frame</child>
+    </joint>
+
+    <joint name="camera_ir_optical_frame_joint" type="fixed">
+      <parent>camera_ir_frame</parent>
+      <child>camera_ir_optical_frame</child>
+    </joint>
+
+    <joint name="camera_depth_frame_joint" type="fixed">
+      <parent>camera_link</parent>
+      <child>camera_depth_frame</child>
+    </joint>
+
+    <joint name="camera_depth_optical_frame_joint" type="fixed">
+      <parent>camera_depth_frame</parent>
+      <child>camera_depth_optical_frame</child>
+    </joint>
+
+    <!-- Prop links -->
+    <!-- 1. Front left prop link -->
+		<link name="S550/front_left">
+			<pose>0.2295 0.1325 0.062 0 -0 0</pose>
+			<inertial>
+			<pose>0 0 0 0 0 0</pose>
+			<mass>0.015</mass>
+			<inertia>
+				<ixx>2.96e-07</ixx>
+				<ixy>0</ixy>
+				<ixz>0</ixz>
+				<iyy>5.74e-05</iyy>
+				<iyz>0</iyz>
+				<izz>5.74e-05</izz>
+			</inertia>
+				</inertial>
+				<collision name="S550/front_left_collision">
+				  <pose>0 0 0 0 0 0</pose>
+				  <geometry>
+					  <cylinder>
+						  <length>0.007</length>
+						  <radius>0.254</radius>
+					  </cylinder>
+          </geometry>
+        </collision>
+        <visual name="S550/front_left_visual">
+          <pose>0 0 0 0 0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>1 1 1</scale>
+              <uri>package://drone_description/models/S550/meshes/apc_10x4_5_ccw.dae</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <script>
+            <name>Gazebo/Blue</name>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+            </script>
+          </material>
+        </visual>
+        <gravity>1</gravity>
+      </link>
+
+    <!-- 2. Left prop link -->
+		<link name="S550/left">
+			<pose>0 0.2650 0.062 0 0 0</pose>
+			<inertial>
+			<pose>0 0 0 0 0 0</pose>
+			<mass>0.015</mass>
+			<inertia>
+				<ixx>2.96e-07</ixx>
+				<ixy>0</ixy>
+				<ixz>0</ixz>
+				<iyy>5.72e-5</iyy>
+				<iyz>0</iyz>
+				<izz>5.74e-05</izz>
+			</inertia>
+				</inertial>
+				<collision name="S550/left_collision">
+				  <pose>0 0 0 0 0 0</pose>
+				  <geometry>
+					  <cylinder>
+						  <length>0.007</length>
+						  <radius>0.254</radius>
+					  </cylinder>
+          </geometry>
+        </collision>
+        <visual name="S550/left_visual">
+          <pose>0 0 0 0 0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>1 1 1</scale>
+              <uri>package://drone_description/models/S550/meshes/apc_10x4_5_cw.dae</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <script>
+            <name>Gazebo/Red</name>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+            </script>
+          </material>
+        </visual>
+        <gravity>1</gravity>
+      </link>
+
+    <!-- 3. Back left prop link -->
+		<link name="S550/back_left">
+			<pose>-0.2295 0.1325 0.062 0 0 0</pose>
+			<inertial>
+			<pose>0 0 0 0 0 0</pose>
+			<mass>0.015</mass>
+			<inertia>
+				<ixx>2.96e-07</ixx>
+				<ixy>0</ixy>
+				<ixz>0</ixz>
+				<iyy>5.72e-5</iyy>
+				<iyz>0</iyz>
+				<izz>5.74e-05</izz>
+			</inertia>
+				</inertial>
+				<collision name="S550/back_left_collision">
+				  <pose>0 0 0 0 0 0</pose>
+				  <geometry>
+					  <cylinder>
+						  <length>0.007</length>
+						  <radius>0.254</radius>
+					  </cylinder>
+          </geometry>
+        </collision>
+        <visual name="S550/back_left_visual">
+          <pose>0 0 0 0 0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>1 1 1</scale>
+              <uri>package://drone_description/models/S550/meshes/apc_10x4_5_ccw.dae</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <script>
+            <name>Gazebo/Blue</name>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+            </script>
+          </material>
+        </visual>
+        <gravity>1</gravity>
+      </link>
+
+    <!-- 4. Back right prop link -->
+		<link name="S550/back_right">
+			<pose>-0.2295 -0.1325 0.062 0 0 0</pose>
+			<inertial>
+			<pose>0 0 0 0 0 0</pose>
+			<mass>0.015</mass>
+			<inertia>
+				<ixx>2.96e-07</ixx>
+				<ixy>0</ixy>
+				<ixz>0</ixz>
+				<iyy>5.72e-5</iyy>
+				<iyz>0</iyz>
+				<izz>5.74e-05</izz>
+			</inertia>
+				</inertial>
+				<collision name="S550/back_right_collision">
+				  <pose>0 0 0 0 0 0</pose>
+				  <geometry>
+					  <cylinder>
+						  <length>0.007</length>
+						  <radius>0.254</radius>
+					  </cylinder>
+          </geometry>
+        </collision>
+        <visual name="S550/back_right_visual">
+          <pose>0 0 0 0 0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>1 1 1</scale>
+              <uri>package://drone_description/models/S550/meshes/apc_10x4_5_cw.dae</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <script>
+            <name>Gazebo/Red</name>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+            </script>
+          </material>
+        </visual>
+        <gravity>1</gravity>
+      </link>
+
+    <!-- 5. right prop link -->
+		<link name="S550/right">
+			<pose>0 -0.2650 0.062 0 0 0</pose>
+			<inertial>
+			<pose>0 0 0 0 0 0</pose>
+			<mass>0.015</mass>
+			<inertia>
+				<ixx>2.96e-07</ixx>
+				<ixy>0</ixy>
+				<ixz>0</ixz>
+				<iyy>5.72e-5</iyy>
+				<iyz>0</iyz>
+				<izz>5.74e-05</izz>
+			</inertia>
+				</inertial>
+				<collision name="S550/right_collision">
+				  <pose>0 0 0 0 0 0</pose>
+				  <geometry>
+					  <cylinder>
+						  <length>0.007</length>
+						  <radius>0.254</radius>
+					  </cylinder>
+          </geometry>
+        </collision>
+        <visual name="S550/right_visual">
+          <pose>0 0 0 0 0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>1 1 1</scale>
+              <uri>package://drone_description/models/S550/meshes/apc_10x4_5_ccw.dae</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <script>
+            <name>Gazebo/Blue</name>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+            </script>
+          </material>
+        </visual>
+        <gravity>1</gravity>
+      </link>
+
+    <!-- 6. Front right prop link -->
+		<link name="S550/front_right">
+			<pose>0.2295 -0.1325 0.062 0 0 0</pose>
+			<inertial>
+			<pose>0 0 0 0 0 0</pose>
+			<mass>0.015</mass>
+			<inertia>
+				<ixx>2.96e-07</ixx>
+				<ixy>0</ixy>
+				<ixz>0</ixz>
+				<iyy>5.72e-5</iyy>
+				<iyz>0</iyz>
+				<izz>5.74e-05</izz>
+			</inertia>
+				</inertial>
+				<collision name="S550/front_right_collision">
+				  <pose>0 0 0 0 0 0</pose>
+				  <geometry>
+					  <cylinder>
+						  <length>0.007</length>
+						  <radius>0.254</radius>
+					  </cylinder>
+          </geometry>
+        </collision>
+        <visual name="S550/front_right_visual">
+          <pose>0 0 0 0 0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>1 1 1</scale>
+              <uri>package://drone_description/models/S550/meshes/apc_10x4_5_cw.dae</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <script>
+            <name>Gazebo/Red</name>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+            </script>
+          </material>
+        </visual>
+        <gravity>1</gravity>
+      </link>
+
+      <!-- Prop Joints -->
+      <!-- 1. Front left joint -->
+      <joint name="S550/front_left_joint" type="revolute">
+        <child>S550/front_left</child>
+        <parent>S550/base_link</parent>
+        <axis>
+          <xyz>0 0 1</xyz>
+          <limit>
+            <lower>-1e+16</lower>
+            <upper>1e+16</upper>
+          </limit>
+          <dynamics>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+      </joint>
+
+      <!-- 2. Left joint -->
+      <joint name="S550/left_joint" type="revolute">
+        <child>S550/left</child>
+        <parent>S550/base_link</parent>
+        <axis>
+          <xyz>0 0 1</xyz>
+          <limit>
+            <lower>-1e+16</lower>
+            <upper>1e+16</upper>
+          </limit>
+          <dynamics>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+      </joint>
+
+      <!-- 3. Back left joint -->
+      <joint name="S550/back_left_joint" type="revolute">
+        <child>S550/back_left</child>
+        <parent>S550/base_link</parent>
+        <axis>
+          <xyz>0 0 1</xyz>
+          <limit>
+            <lower>-1e+16</lower>
+            <upper>1e+16</upper>
+          </limit>
+          <dynamics>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+      </joint>
+
+      <!-- 4. Back right joint -->
+      <joint name="S550/back_right_joint" type="revolute">
+        <child>S550/back_right</child>
+        <parent>S550/base_link</parent>
+        <axis>
+          <xyz>0 0 1</xyz>
+          <limit>
+            <lower>-1e+16</lower>
+            <upper>1e+16</upper>
+          </limit>
+          <dynamics>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+      </joint>
+
+      <!-- 5. right joint -->
+      <joint name="S550/right_joint" type="revolute">
+        <child>S550/right</child>
+        <parent>S550/base_link</parent>
+        <axis>
+          <xyz>0 0 1</xyz>
+          <limit>
+            <lower>-1e+16</lower>
+            <upper>1e+16</upper>
+          </limit>
+          <dynamics>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+      </joint>
+
+      <!-- 6. Front right joint -->
+      <joint name="S550/front_right_joint" type="revolute">
+        <child>S550/front_right</child>
+        <parent>S550/base_link</parent>
+        <axis>
+          <xyz>0 0 1</xyz>
+          <limit>
+            <lower>-1e+16</lower>
+            <upper>1e+16</upper>
+          </limit>
+          <dynamics>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+      </joint>
+
+      <!-- Multicopter plugins -->
+      <!-- 1. Front left plugin -->
+      <plugin
+      filename="ignition-gazebo-multicopter-motor-model-system"
+      name="gz::sim::systems::MulticopterMotorModel">
+        <robotNamespace>S550</robotNamespace>
+        <jointName>S550/front_left_joint</jointName>
+        <linkName>S550/front_left</linkName>
+        <turningDirection>ccw</turningDirection>
+        <timeConstantUp>1e-10</timeConstantUp>
+        <timeConstantDown>1e-10</timeConstantDown>
+        <maxRotVelocity>838</maxRotVelocity>
+        <motorConstant>1.336e-05</motorConstant>
+        <momentConstant>0.01569</momentConstant>
+        <commandSubTopic>gazebo/command/motor_speed</commandSubTopic>
+        <motorNumber>0</motorNumber>
+        <rotorDragCoefficient>8.06428e-05</rotorDragCoefficient>
+        <rollingMomentCoefficient>1e-06</rollingMomentCoefficient>
+        <rotorVelocitySlowdownSim>10</rotorVelocitySlowdownSim>
+        <motorType>velocity</motorType>
+      </plugin>
+
+      <!-- 2. Left plugin -->
+      <plugin
+      filename="ignition-gazebo-multicopter-motor-model-system"
+      name="gz::sim::systems::MulticopterMotorModel">
+        <robotNamespace>S550</robotNamespace>
+        <jointName>S550/left_joint</jointName>
+        <linkName>S550/left</linkName>
+        <turningDirection>cw</turningDirection>
+        <timeConstantUp>1e-10</timeConstantUp>
+        <timeConstantDown>1e-10</timeConstantDown>
+        <maxRotVelocity>838</maxRotVelocity>
+        <motorConstant>1.336e-05</motorConstant>
+        <momentConstant>0.01569</momentConstant>
+        <commandSubTopic>gazebo/command/motor_speed</commandSubTopic>
+        <motorNumber>1</motorNumber>
+        <rotorDragCoefficient>8.06428e-05</rotorDragCoefficient>
+        <rollingMomentCoefficient>1e-06</rollingMomentCoefficient>
+        <rotorVelocitySlowdownSim>10</rotorVelocitySlowdownSim>
+        <motorType>velocity</motorType>
+      </plugin>
+
+      <!-- 3. Back Left plugin -->
+      <plugin
+      filename="ignition-gazebo-multicopter-motor-model-system"
+      name="gz::sim::systems::MulticopterMotorModel">
+        <robotNamespace>S550</robotNamespace>
+        <jointName>S550/back_left_joint</jointName>
+        <linkName>S550/back_left</linkName>
+        <turningDirection>ccw</turningDirection>
+        <timeConstantUp>1e-10</timeConstantUp>
+        <timeConstantDown>1e-10</timeConstantDown>
+        <maxRotVelocity>838</maxRotVelocity>
+        <motorConstant>1.336e-05</motorConstant>
+        <momentConstant>0.01569</momentConstant>
+        <commandSubTopic>gazebo/command/motor_speed</commandSubTopic>
+        <motorNumber>2</motorNumber>
+        <rotorDragCoefficient>8.06428e-05</rotorDragCoefficient>
+        <rollingMomentCoefficient>1e-06</rollingMomentCoefficient>
+        <rotorVelocitySlowdownSim>10</rotorVelocitySlowdownSim>
+        <motorType>velocity</motorType>
+      </plugin>
+
+      <!-- 4. Back right plugin -->
+      <plugin
+      filename="ignition-gazebo-multicopter-motor-model-system"
+      name="gz::sim::systems::MulticopterMotorModel">
+        <robotNamespace>S550</robotNamespace>
+        <jointName>S550/back_right_joint</jointName>
+        <linkName>S550/back_right</linkName>
+        <turningDirection>cw</turningDirection>
+        <timeConstantUp>1e-10</timeConstantUp>
+        <timeConstantDown>1e-10</timeConstantDown>
+        <maxRotVelocity>838</maxRotVelocity>
+        <motorConstant>1.336e-05</motorConstant>
+        <momentConstant>0.01569</momentConstant>
+        <commandSubTopic>gazebo/command/motor_speed</commandSubTopic>
+        <motorNumber>3</motorNumber>
+        <rotorDragCoefficient>8.06428e-05</rotorDragCoefficient>
+        <rollingMomentCoefficient>1e-06</rollingMomentCoefficient>
+        <rotorVelocitySlowdownSim>10</rotorVelocitySlowdownSim>
+        <motorType>velocity</motorType>
+      </plugin>
+
+      <!-- 5. Right plugin -->
+      <plugin
+      filename="ignition-gazebo-multicopter-motor-model-system"
+      name="gz::sim::systems::MulticopterMotorModel">
+        <robotNamespace>S550</robotNamespace>
+        <jointName>S550/right_joint</jointName>
+        <linkName>S550/right</linkName>
+        <turningDirection>ccw</turningDirection>
+        <timeConstantUp>1e-10</timeConstantUp>
+        <timeConstantDown>1e-10</timeConstantDown>
+        <maxRotVelocity>838</maxRotVelocity>
+        <motorConstant>1.336e-05</motorConstant>
+        <momentConstant>0.01569</momentConstant>
+        <commandSubTopic>gazebo/command/motor_speed</commandSubTopic>
+        <motorNumber>4</motorNumber>
+        <rotorDragCoefficient>8.06428e-05</rotorDragCoefficient>
+        <rollingMomentCoefficient>1e-06</rollingMomentCoefficient>
+        <rotorVelocitySlowdownSim>10</rotorVelocitySlowdownSim>
+        <motorType>velocity</motorType>
+      </plugin>
+
+      <!-- 6. Front right plugin -->
+      <plugin
+      filename="ignition-gazebo-multicopter-motor-model-system"
+      name="gz::sim::systems::MulticopterMotorModel">
+        <robotNamespace>S550</robotNamespace>
+        <jointName>S550/front_right_joint</jointName>
+        <linkName>S550/front_right</linkName>
+        <turningDirection>cw</turningDirection>
+        <timeConstantUp>1e-10</timeConstantUp>
+        <timeConstantDown>1e-10</timeConstantDown>
+        <maxRotVelocity>838</maxRotVelocity>
+        <motorConstant>1.336e-05</motorConstant>
+        <momentConstant>0.01569</momentConstant>
+        <commandSubTopic>gazebo/command/motor_speed</commandSubTopic>
+        <motorNumber>5</motorNumber>
+        <rotorDragCoefficient>8.06428e-05</rotorDragCoefficient>
+        <rollingMomentCoefficient>1e-06</rollingMomentCoefficient>
+        <rotorVelocitySlowdownSim>10</rotorVelocitySlowdownSim>
+        <motorType>velocity</motorType>
+      </plugin>
+
+      <!-- Odom publisher -->
+      <plugin
+      filename="ignition-gazebo-odometry-publisher-system"
+      name="ignition::gazebo::systems::OdometryPublisher">
+        <odom_frame>S550/odom</odom_frame>
+        <robot_base_frame>S550/base_link</robot_base_frame>
+        <dimensions>3</dimensions>
+        <xyz_offset>0 0 -0.27249985481618144</xyz_offset>
+        <rpy_offset>0 0 0</rpy_offset>
+        <odom_topic>S550/ground_truth/odom</odom_topic>
+        <tf_topic>S550/pose</tf_topic>
+        <odom_publish_frequency>100.0</odom_publish_frequency>
+        <gaussian_noise>0.002</gaussian_noise>
+      </plugin>
+
+      <plugin
+        filename="ignition-gazebo-joint-state-publisher-system"
+        name="ignition::gazebo::systems::JointStatePublisher">
+      </plugin>
+
+  </model>
+</sdf>
