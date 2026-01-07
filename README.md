@@ -60,11 +60,11 @@ ign service -s /world/S550_world/set_pose --reqtype ignition.msgs.Pose --reptype
 
 ## 6. Crieteria for motor time constant (Simulation only)
 
-$ \dot{\omega} = \frac{\omega_{cmd}-\omega}{\tau}$
+$\dot{\omega} = \frac{\omega_{cmd}-\omega}{\tau}$
 
 Maxon motor - maximum acceleration
 
-$ \dot{\omega}_{max}$ = 20,000 rpm/s
+$\dot{\omega}_{max}$ = 20,000 rpm/s
 
 10 ms cycle
 
