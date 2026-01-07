@@ -11,11 +11,13 @@
 
 #include <nav_msgs/msg/odometry.hpp>
 #include <geometry_msgs/msg/pose.hpp>
+#include <geometry_msgs/msg/pose_stamped.hpp>
 
 using namespace std::chrono_literals;
 
 using nav_msgs::msg::Odometry;
 using geometry_msgs::msg::Pose;
+using geometry_msgs::msg::PoseStamped;
 
 struct NoiseParameters
 {
@@ -49,6 +51,7 @@ class RosOdomNoiseGenerator
     rclcpp::Node::SharedPtr node_;
     rclcpp::Subscription<Odometry>::SharedPtr odom_sub_;
     rclcpp::Publisher<Odometry>::SharedPtr noisy_odom_pub_;
+    rclcpp::Publisher<PoseStamped>::SharedPtr noisy_pose_pub_;
     rclcpp::TimerBase::SharedPtr timer_{nullptr};
 
     // Noise parameters

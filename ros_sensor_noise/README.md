@@ -29,11 +29,15 @@ ros2 run ros_sensor_noise ros_odom_noise_generator --ros-args --params-file /pat
 
 ## Configuration
 
-Edit `config/noise.yaml` to adjust noise parameters:
+Edit `config/noise.yaml` to adjust topic names and noise parameters:
 
 ```yaml
 /**:
   ros__parameters:
+    topics:
+      odom_input: "odom"            # Input odometry topic
+      odom_output: "noisy_odom"     # Output odometry topic with noise
+      pose_output: "noisy_pose"     # Output pose topic with noise
     noise:
       position_stddev: 0.002        # Position noise (meters)
       angle_stddev: 0.01            # Angle noise (radians)
@@ -45,11 +49,14 @@ Edit `config/noise.yaml` to adjust noise parameters:
 
 ## Topics
 
+All topic names are configurable via the yaml file.
+
 ### Subscribed Topics
-- `/odom` (nav_msgs/Odometry): Input odometry data
+- `/odom` (nav_msgs/Odometry): Input odometry data (configurable via `topics.odom_input`)
 
 ### Published Topics
-- `/noisy_odom` (nav_msgs/Odometry): Odometry data with noise injected
+- `/noisy_odom` (nav_msgs/Odometry): Odometry data with noise injected (configurable via `topics.odom_output`)
+- `/noisy_pose` (geometry_msgs/PoseStamped): Pose data with noise injected (configurable via `topics.pose_output`)
 
 ## Implementation Details
 
