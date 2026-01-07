@@ -25,8 +25,9 @@ def generate_launch_description():
     pkg_prj_description = get_package_share_directory('drone_description')
     pkg_prj_gazebo = get_package_share_directory('drone_gazebo')
     pkg_prj_ros_motor_model = get_package_share_directory('ros_motor_model')
+    pkg_ros_sensor_noise = get_package_share_directory('ros_sensor_noise')
     pkg_ros_gz_sim = get_package_share_directory('ros_gz_sim')
-
+    
     # Load SDF file
     sdf_file = os.path.join(pkg_prj_description, 'models', 'S550', 'model.sdf')
     
@@ -35,6 +36,8 @@ def generate_launch_description():
     
     # Load ROS motor model config file
     ros_first_order_motor_model_config = os.path.join(pkg_prj_ros_motor_model, 'config', 'first_order_motor.yaml')
+    
+    ros_sensor_noise_config = os.path.join(pkg_ros_sensor_noise, 'config', 'noise.yaml')
 
     with open(sdf_file,'r') as infp:
         robot_desc = infp.read()
@@ -109,8 +112,17 @@ def generate_launch_description():
         package='ros_motor_model',
         executable='ros_first_order_motor_model',
         output='screen',
-        parameters=[{'use_sim_time': True},
+        parameters=[{'use_sim_time': False},
                     ros_first_order_motor_model_config
+                    ]
+    )
+    
+    ros_sensor_noise = Node(
+        package='ros_sensor_noise',
+        executable='ros_odom_noise_generator',
+        output='screen',
+        parameters=[{'use_sim_time': False},
+                    ros_sensor_noise_config
                     ]
     )
 
@@ -125,4 +137,5 @@ def generate_launch_description():
         robot_state_publisher,
         rviz,
         ros_first_order_motor_model,
+        ros_sensor_noise
     ])
