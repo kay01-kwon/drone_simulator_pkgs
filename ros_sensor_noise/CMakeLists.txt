@@ -10,6 +10,43 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(Eigen3 REQUIRED)
+
+# Include directories
+include_directories(
+  include
+  ${EIGEN3_INCLUDE_DIR}
+)
+
+# Add executable
+add_executable(ros_odom_noise_generator
+  src/main.cpp
+  include/ros_sensor_noise/ros_odom_noise_generator.cpp
+)
+
+# Link dependencies
+ament_target_dependencies(ros_odom_noise_generator
+  rclcpp
+  nav_msgs
+  geometry_msgs
+)
+
+target_link_libraries(ros_odom_noise_generator
+  Eigen3::Eigen
+)
+
+# Install executable
+install(TARGETS
+  ros_odom_noise_generator
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+# Install config files
+install(DIRECTORY
+  config
+  launch
+  DESTINATION share/${PROJECT_NAME}
+)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
