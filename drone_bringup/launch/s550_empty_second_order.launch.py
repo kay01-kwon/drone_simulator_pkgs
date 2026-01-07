@@ -25,6 +25,7 @@ def generate_launch_description():
     pkg_prj_description = get_package_share_directory('drone_description')
     pkg_prj_gazebo = get_package_share_directory('drone_gazebo')
     pkg_ros_motor_model = get_package_share_directory('ros_motor_model')
+    pkg_ros_sensor_noise = get_package_share_directory('ros_sensor_noise')
     pkg_ros_gz_sim = get_package_share_directory('ros_gz_sim')
 
     # Load SDF file
@@ -33,6 +34,7 @@ def generate_launch_description():
     # Load ROS-GZ bridge config file
     ros_gz_bridge_config = os.path.join(pkg_prj_bringup, 'config', 'ros_gz_bridge_s550.yaml')
     ros_second_order_motor_model_config = os.path.join(pkg_ros_motor_model, 'config', 'second_order_motor.yaml')
+    ros_sensor_noise_config = os.path.join(pkg_ros_sensor_noise, 'config', 'noise.yaml')
 
     with open(sdf_file,'r') as infp:
         robot_desc = infp.read()
@@ -93,6 +95,24 @@ def generate_launch_description():
             {'robot_description': robot_desc},
             ]
     )
+    
+    ros_second_order_motor_model = Node(
+        package='ros_motor_model',
+        executable='ros_second_order_motor_model',
+        output='screen',
+        parameters=[{'use_sim_time': False},
+                    ros_second_order_motor_model_config
+                    ]
+    )
+    
+    ros_sensor_noise = Node(
+        package='ros_sensor_noise',
+        executable='ros_odom_noise_generator',
+        output='screen',
+        parameters=[{'use_sim_time': False},
+                    ros_sensor_noise_config
+                    ]
+    )
 
     rviz = Node(
         package='rviz2',
@@ -101,15 +121,6 @@ def generate_launch_description():
                                       'config', 
                                       's550.rviz')],
         condition=IfCondition(LaunchConfiguration('rviz'))
-    )
-
-    ros_second_order_motor_model = Node(
-        package='ros_motor_model',
-        executable='ros_second_order_motor_model',
-        output='screen',
-        parameters=[{'use_sim_time': True},
-                    ros_second_order_motor_model_config
-                    ]
     )
 
     return LaunchDescription([
@@ -123,4 +134,5 @@ def generate_launch_description():
         robot_state_publisher,
         rviz,
         ros_second_order_motor_model,
+        ros_sensor_noise,
     ])

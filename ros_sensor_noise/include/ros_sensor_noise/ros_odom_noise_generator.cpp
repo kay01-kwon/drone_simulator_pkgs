@@ -135,6 +135,8 @@ void RosOdomNoiseGenerator::applyNoise()
     // 7. Convert back to quaternion
     Eigen::Quaterniond noisy_quat(noisy_angle_axis);
 
+    noisy_odom.header.stamp = node_->now();
+
     // 8. Set the noisy quaternion in the message
     noisy_odom.pose.pose.orientation.w = noisy_quat.w();
     noisy_odom.pose.pose.orientation.x = noisy_quat.x();
@@ -152,7 +154,7 @@ void RosOdomNoiseGenerator::applyNoise()
 
     // Create and publish noisy pose
     PoseStamped noisy_pose;
-    noisy_pose.header = noisy_odom.header;
+    noisy_pose.header.stamp = node_->now();
     noisy_pose.pose = noisy_odom.pose.pose;
     noisy_pose_pub_->publish(noisy_pose);
 }
