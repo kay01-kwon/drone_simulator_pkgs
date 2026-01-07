@@ -34,6 +34,8 @@ class RosOdomNoiseGenerator
 
     ~RosOdomNoiseGenerator();
 
+    rclcpp::Node::SharedPtr getNode() { return node_; }
+
     private:
 
     void odomCallback(const Odometry::SharedPtr msg);
@@ -52,6 +54,12 @@ class RosOdomNoiseGenerator
     // Noise parameters
     bool noise_enabled_{false};
     NoiseParameters noise_params_;
+
+    // Storage for latest odometry message
+    Odometry latest_odom_;
+
+    // Random number generator
+    std::mt19937 gen_;
 
 };
 
