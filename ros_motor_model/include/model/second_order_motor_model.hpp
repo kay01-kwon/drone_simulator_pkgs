@@ -7,11 +7,11 @@
 
 struct SecondOrderMotorParams
 {
-    double alpha_max{15000.0};      // Maximum angular acceleration [RPM/s]
-    double p1{12.1736156138338};    // Friction coefficient
-    double p2{0.0011520763961};     // Drag coefficient
-    double p3{137.2954976743238};   // Motor Stiffness
+    double p1{25.16687};    // Friction coefficient
+    double p2{0.003933};     // Drag coefficient
+    double p3{515.605};   // Motor Stiffness
     double jerk_max{250000.0};      // Maximum angular jerk [RPM/s^2]
+    double alpha_max{15000.0};      // Maximum angular acceleration [RPM/s]
 };
 
 
