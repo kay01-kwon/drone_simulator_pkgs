@@ -171,6 +171,7 @@ void RosSecondOrderMotorModelNode::publish_motor_velocity()
 
                 // Fill in the actual RPM messages according to UAV type
                 quad_actual_rpm_msg_.rpm[i] = static_cast<int32_t>(actual_rpm);
+                quad_actual_rpm_msg_.acceleration[i] = 0;
             }
             pub_actual_rpm_quad_->publish(quad_actual_rpm_msg_);
 
@@ -200,6 +201,7 @@ void RosSecondOrderMotorModelNode::publish_motor_velocity()
 
                 // Fill in the actual RPM messages according to UAV type
                 hexa_actual_rpm_msg_.rpm[i] = static_cast<int32_t>(actual_rpm);
+                hexa_actual_rpm_msg_.acceleration[i] = 0;
             }
             pub_actual_rpm_hexa_->publish(hexa_actual_rpm_msg_);
 

@@ -151,6 +151,7 @@ void RosFirstOrderMotorModelNode::publish_motor_velocity()
 
             actual_vel = actual_vel * RPS_TO_RPM; // Convert RPS to RPM
             quad_actual_rpm_msg_.rpm[i] = static_cast<int16_t>(actual_vel);
+            quad_actual_rpm_msg_.acceleration[i] = 0;
         }
 
         pub_actual_rpm_quad_->publish(quad_actual_rpm_msg_);
@@ -172,6 +173,7 @@ void RosFirstOrderMotorModelNode::publish_motor_velocity()
             
             actual_vel = actual_vel * RPS_TO_RPM; // Convert RPS to RPM
             hexa_actual_rpm_msg_.rpm[i] = static_cast<int16_t>(actual_vel);
+            hexa_actual_rpm_msg_.acceleration[i] = 0;
         }
         // printf("\n");
         pub_actual_rpm_hexa_->publish(hexa_actual_rpm_msg_);
