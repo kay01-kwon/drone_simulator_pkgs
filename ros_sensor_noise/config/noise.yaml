@@ -10,4 +10,4 @@
       axis_stddev: 0.005  # Standard deviation for axis noise in radians
       linear_velocity_stddev: 0.01  # Standard deviation for velocity noise in m/s
       angular_velocity_stddev: 0.01  # Standard deviation for angular velocity noise in rad/s
-      apply_noise: true  # Flag to enable or disable noise application
+      apply_noise: false  # Flag to enable or disable noise application
