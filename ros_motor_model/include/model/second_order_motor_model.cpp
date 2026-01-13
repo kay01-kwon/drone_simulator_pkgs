@@ -41,6 +41,9 @@ void SecondOrderMotorModel::set_state(const double &rpm_cmd,
         dt
     );
 
+    // Clamp angular velocity and acceleration to their maximum values
+    state_(1) = std::clamp(state_(1), -params_.alpha_max, params_.alpha_max);
+
     
     t_prev_ = t_curr_;
 }
