@@ -50,10 +50,10 @@ RosOdomNoiseGenerator::RosOdomNoiseGenerator()
 
     // Create subscriber and publishers
     odom_sub_ = node_->create_subscription<Odometry>(
-        odom_input_topic, 10, std::bind(&RosOdomNoiseGenerator::odomCallback, this, std::placeholders::_1));
+        odom_input_topic, rclcpp::SensorDataQoS(), std::bind(&RosOdomNoiseGenerator::odomCallback, this, std::placeholders::_1));
 
-    noisy_odom_pub_ = node_->create_publisher<Odometry>(odom_output_topic, rclcpp::QoS(5));
-    noisy_pose_pub_ = node_->create_publisher<PoseStamped>(pose_output_topic, rclcpp::QoS(5));
+    noisy_odom_pub_ = node_->create_publisher<Odometry>(odom_output_topic, rclcpp::SensorDataQoS());
+    noisy_pose_pub_ = node_->create_publisher<PoseStamped>(pose_output_topic, rclcpp::SensorDataQoS());
 
     // Initialize random number generator
     std::random_device rd;
@@ -74,6 +74,9 @@ void RosOdomNoiseGenerator::odomCallback(const Odometry::SharedPtr msg)
         applyNoise();
     } else {
         // If noise is disabled, just republish the original messages
+        msg->header.frame_id = "noise_disabled";
+        msg->header.stamp = node_->now();
+
         noisy_odom_pub_->publish(*msg);
 
         PoseStamped pose;
