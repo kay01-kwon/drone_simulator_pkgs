@@ -159,15 +159,14 @@ void RosSecondOrderMotorModelNode::publish_motor_velocity()
                 motor_models_.at(i)->set_state(cmd_rpm, time_curr_);
                 motor_models_.at(i)->get_state(actual_rpm);
 
+                // Gazebo ROS interface expects rad/s
+                actuators_msg_.velocity.at(i) = actual_rpm * RPM_TO_RPS;
                 // Add noise if enabled
                 if (noise_enabled_)
                 {
                     double noise = noise_distribution_(random_generator_);
                     actual_rpm += noise;
                 }
-
-                // Gazebo ROS interface expects rad/s
-                actuators_msg_.velocity.at(i) = actual_rpm * RPM_TO_RPS;
 
                 // Fill in the actual RPM messages according to UAV type
                 quad_actual_rpm_msg_.rpm[i] = static_cast<int32_t>(actual_rpm);
@@ -188,16 +187,15 @@ void RosSecondOrderMotorModelNode::publish_motor_velocity()
 
                 motor_models_.at(i)->set_state(cmd_rpm, time_curr_);
                 motor_models_.at(i)->get_state(actual_rpm);
-
+                
+                // Gazebo ROS interface expects rad/s
+                actuators_msg_.velocity.at(i) = actual_rpm * RPM_TO_RPS;
                 // Add noise if enabled
                 if (noise_enabled_)
                 {
                     double noise = noise_distribution_(random_generator_);
                     actual_rpm += noise;
                 }
-
-                // Gazebo ROS interface expects rad/s
-                actuators_msg_.velocity.at(i) = actual_rpm * RPM_TO_RPS;
 
                 // Fill in the actual RPM messages according to UAV type
                 hexa_actual_rpm_msg_.rpm[i] = static_cast<int32_t>(actual_rpm);
