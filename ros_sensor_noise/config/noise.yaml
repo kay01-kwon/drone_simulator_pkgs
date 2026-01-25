@@ -5,9 +5,9 @@
       odom_output: "/mavros/local_position/odom"  # Output odometry topic with noise
       pose_output: "/mocap/pose"  # Output pose topic with noise
     noise:
-      position_stddev: 0.002  # Standard deviation for position noise in meters
-      angle_stddev: 0.01  # Standard deviation for angle noise in radians
+      position_stddev: 0.00051  # Standard deviation for position noise in meters
+      angle_stddev: 0.00017  # Standard deviation for angle noise in radians
       axis_stddev: 0.005  # Standard deviation for axis noise in radians
-      linear_velocity_stddev: 0.01  # Standard deviation for velocity noise in m/s
-      angular_velocity_stddev: 0.01  # Standard deviation for angular velocity noise in rad/s
-      apply_noise: false  # Flag to enable or disable noise application
+      linear_velocity_stddev: 0.000106  # Standard deviation for velocity noise in m/s
+      angular_velocity_stddev: 0.000245  # Standard deviation for angular velocity noise in rad/s
+      apply_noise: true  # Flag to enable or disable noise application
