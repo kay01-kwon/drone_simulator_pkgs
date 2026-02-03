@@ -2,7 +2,7 @@
   ros__parameters:
     topics:
       odom_input: "/S550/ground_truth/odom"  # Input odometry topic
-      odom_output: "/mavros/local_position/odom"  # Output odometry topic with noise
+      odom_output: "/mavros/local_position/odom_sim"  # Output odometry topic with noise
       pose_output: "/mocap/pose"  # Output pose topic with noise
     noise:
       position_stddev: 0.00051  # Standard deviation for position noise in meters
