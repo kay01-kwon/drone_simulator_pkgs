@@ -10,21 +10,21 @@
       <inertial>
         <!-- Center of mass -->
         <pose>-0.010 0.0 0 0 0 0</pose>
-        <mass>2.940</mass>
+        <mass>2.970</mass>
         <inertia>
-          <ixx>0.060</ixx>
-          <ixy>0</ixy>
-          <ixz>0</ixz>
-          <iyy>0.060</iyy>
-          <iyz>0</iyz>
-          <izz>0.080</izz>
+          <ixx>0.05174431330</ixx>
+          <ixy>-0.00000237643</ixy>
+          <ixz>0.00005974636</ixz>
+          <iyy>0.05137382828</iyy>
+          <iyz>0.00091079924</iyz>
+          <izz>0.07683681276</izz>
         </inertia>
       </inertial>
 			<collision name="S550/base_link_collision">
 				<pose>0 0 0 0 0 0</pose>
 				<geometry>
 					<box>
-						<size>0.28845 0.28845 0.545</size>
+						<size>0.255 0.28845 0.545</size>
 					</box>
 				</geometry>
 				<surface>
