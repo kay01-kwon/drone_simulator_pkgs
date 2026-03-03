@@ -6,7 +6,7 @@
       p2: 0.003933
       p3: 515.605
       alpha_max: 15000.0
-      jerk_max: 250000.0
+      jerk_max: 150000.0
       noise:
         enabled: true
         mean: 0.0
