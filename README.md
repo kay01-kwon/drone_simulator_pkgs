@@ -58,16 +58,18 @@ ros2 launch drone_bringup s550_empty.launch.py
 ign service -s /world/S550_world/set_pose --reqtype ignition.msgs.Pose --reptype ignition.msgs.Boolean --timeout 5000 --req 'name: "S550" position: {x: 0.0, y: 0.0, z: 1.0} orientation: {w: 1.0, x: 0.0, y:0.0, z:0.0}'
 ```
 
-## 6. Crieteria for motor time constant (Simulation only)
+## 6. Motor constant
 
-$\dot{\omega} = \frac{\omega_{cmd}-\omega}{\tau}$
+$C_{T,rps}$ (unit: $\frac{N}{(rad/s)^2}$)
 
-Maxon motor - maximum acceleration
+Experiment $C_{T,rpm} = 1.386 \cdot 10^{-7} \frac{N}{(rpm)^2}$
 
-$\dot{\omega}_{max}$ = 20,000 rpm/s
+Conversion
 
-10 ms cycle
+$C_{T,rps} = C_{T,rpm}\cdot (\frac{60}{2\pi})^2$
 
-$\Delta \omega = \omega_{cmd} - \omega= \dot{\omega}_{max} * 0.010 s = 200 rpm$
+$ \therefore C_{T,rps} = 1.2639\cdot 10^{-5} \frac{N}{(rad/s)^2}$
 
-$\tau = \frac{\Delta \omega}{\dot{\omega}_{max}}=\frac{200 rpm}{20,000 rpm/s} = 0.01 s$
+<img src="figure/02_thrust_timeseries.png">
+
+<img src="figure/03_rpm_vs_thrust.png">
