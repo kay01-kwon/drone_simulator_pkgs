@@ -13,12 +13,12 @@
           0 0 0</pose>
         <mass>3.188</mass>
         <inertia>
-          <ixx>0.05174431330</ixx>
-          <ixy>-0.00000237643</ixy>
-          <ixz>0.00005974636</ixz>
-          <iyy>0.05137382828</iyy>
-          <iyz>0.00091079924</iyz>
-          <izz>0.07683681276</izz>
+          <ixx>0.06573874618</ixx>
+          <ixy>-0.00000255066</ixy>
+          <ixz>0.000058391</ixz>
+          <iyy>0.06535731789</iyy>
+          <iyz>0.00099130575</iyz>
+          <izz>0.10317211827</izz>
         </inertia>
       </inertial>
 			<collision name="S550/base_link_collision">
