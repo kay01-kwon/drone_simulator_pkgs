@@ -38,6 +38,7 @@ def generate_launch_description():
     ros_first_order_motor_model_config = os.path.join(pkg_prj_ros_motor_model, 'config', 'first_order_motor.yaml')
     
     ros_sensor_noise_config = os.path.join(pkg_ros_sensor_noise, 'config', 'noise.yaml')
+    ros_odom_delay_config = os.path.join(pkg_ros_sensor_noise, 'config', 'delay.yaml')
 
     with open(sdf_file,'r') as infp:
         robot_desc = infp.read()
@@ -126,6 +127,15 @@ def generate_launch_description():
                     ]
     )
 
+    ros_odom_delay = Node(
+        package='ros_sensor_noise',
+        executable='ros_odom_delay_node',
+        output='screen',
+        parameters=[{'use_sim_time': False},
+                    ros_odom_delay_config
+                    ]
+    )
+
     return LaunchDescription([
         gz_sim,
         DeclareLaunchArgument('rviz', default_value='true',
@@ -137,5 +147,6 @@ def generate_launch_description():
         robot_state_publisher,
         rviz,
         ros_first_order_motor_model,
-        ros_sensor_noise
+        ros_sensor_noise,
+        ros_odom_delay
     ])
