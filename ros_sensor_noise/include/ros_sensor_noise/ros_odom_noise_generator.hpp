@@ -7,11 +7,15 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <deque>
 #include <random>
 
 #include <nav_msgs/msg/odometry.hpp>
 #include <geometry_msgs/msg/pose.hpp>
 #include <geometry_msgs/msg/pose_stamped.hpp>
+
+#include <Eigen/Dense>
+#include <Eigen/Geometry>
 
 using namespace std::chrono_literals;
 
@@ -44,7 +48,13 @@ class RosOdomNoiseGenerator
 
     void applyNoise();
 
-    void timerCallback();
+    void delayTimerCallback();
+
+    void publishDelayed();
+
+    Odometry interpolate(const Odometry& odom_a,
+                         const Odometry& odom_b,
+                         double alpha);
 
     void configure();
 
@@ -52,7 +62,7 @@ class RosOdomNoiseGenerator
     rclcpp::Subscription<Odometry>::SharedPtr odom_sub_;
     rclcpp::Publisher<Odometry>::SharedPtr noisy_odom_pub_;
     rclcpp::Publisher<PoseStamped>::SharedPtr noisy_pose_pub_;
-    rclcpp::TimerBase::SharedPtr timer_{nullptr};
+    rclcpp::TimerBase::SharedPtr delay_timer_{nullptr};
 
     // Noise parameters
     bool noise_enabled_{false};
@@ -63,6 +73,12 @@ class RosOdomNoiseGenerator
 
     // Random number generator
     std::mt19937 gen_;
+
+    // Pure delay buffer and parameters
+    double delay_ms_{0.0};
+    int64_t delay_ns_{0};
+    std::deque<Odometry> noisy_odom_buffer_;
+    static constexpr int64_t MAX_BUFFER_DURATION_NS = 500000000LL; // 500 ms
 
 };
 
