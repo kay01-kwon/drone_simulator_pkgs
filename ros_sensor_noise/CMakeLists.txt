@@ -24,19 +24,8 @@ add_executable(ros_odom_noise_generator
   include/ros_sensor_noise/ros_odom_noise_generator.cpp
 )
 
-add_executable(ros_odom_delay_node
-  src/delay_main.cpp
-  include/ros_sensor_noise/ros_odom_delay_node.cpp
-)
-
 # Link dependencies
 ament_target_dependencies(ros_odom_noise_generator
-  rclcpp
-  nav_msgs
-  geometry_msgs
-)
-
-ament_target_dependencies(ros_odom_delay_node
   rclcpp
   nav_msgs
   geometry_msgs
@@ -46,14 +35,9 @@ target_link_libraries(ros_odom_noise_generator
   Eigen3::Eigen
 )
 
-target_link_libraries(ros_odom_delay_node
-  Eigen3::Eigen
-)
-
 # Install executable
 install(TARGETS
   ros_odom_noise_generator
-  ros_odom_delay_node
   DESTINATION lib/${PROJECT_NAME}
 )
 

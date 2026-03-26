@@ -35,7 +35,6 @@ def generate_launch_description():
     ros_gz_bridge_config = os.path.join(pkg_prj_bringup, 'config', 'ros_gz_bridge_s550.yaml')
     ros_second_order_motor_model_config = os.path.join(pkg_ros_motor_model, 'config', 'second_order_motor.yaml')
     ros_sensor_noise_config = os.path.join(pkg_ros_sensor_noise, 'config', 'noise.yaml')
-    ros_odom_delay_config = os.path.join(pkg_ros_sensor_noise, 'config', 'delay.yaml')
 
     with open(sdf_file,'r') as infp:
         robot_desc = infp.read()
@@ -124,15 +123,6 @@ def generate_launch_description():
         condition=IfCondition(LaunchConfiguration('rviz'))
     )
 
-    ros_odom_delay = Node(
-        package='ros_sensor_noise',
-        executable='ros_odom_delay_node',
-        output='screen',
-        parameters=[{'use_sim_time': False},
-                    ros_odom_delay_config
-                    ]
-    )
-
     return LaunchDescription([
         gz_sim,
         DeclareLaunchArgument('rviz', default_value='true',
@@ -145,5 +135,4 @@ def generate_launch_description():
         rviz,
         ros_second_order_motor_model,
         ros_sensor_noise,
-        ros_odom_delay
     ])

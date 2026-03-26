@@ -11,3 +11,4 @@
       linear_velocity_stddev: 0.000106  # Standard deviation for velocity noise in m/s
       angular_velocity_stddev: 0.000245  # Standard deviation for angular velocity noise in rad/s
       apply_noise: true  # Flag to enable or disable noise application
+      delay_ms: 25.0  # Pure delay in milliseconds (0.0 = no delay)

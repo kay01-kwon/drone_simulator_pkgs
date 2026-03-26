@@ -1,8 +1,0 @@
-/**:
-  ros__parameters:
-    topics:
-      odom_input: "/mavros/local_position/odom_sim"
-      delayed_odom_output: "/mavros/local_position/odom_delayed"
-      delayed_pose_output: "/mocap/pose_delayed"
-    delay:
-      delay_ms: 25.0  # Interpolation delay in milliseconds
