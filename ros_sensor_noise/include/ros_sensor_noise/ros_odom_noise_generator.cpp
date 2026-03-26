@@ -57,22 +57,18 @@ RosOdomNoiseGenerator::RosOdomNoiseGenerator()
 
     // Create subscriber and publishers
     odom_sub_ = node_->create_subscription<Odometry>(
-        odom_input_topic, rclcpp::SensorDataQoS(), std::bind(&RosOdomNoiseGenerator::odomCallback, this, std::placeholders::_1));
+        odom_input_topic, rclcpp::SensorDataQoS(),
+        std::bind(&RosOdomNoiseGenerator::odomCallback,
+                  this, std::placeholders::_1));
 
-    noisy_odom_pub_ = node_->create_publisher<Odometry>(odom_output_topic, rclcpp::SensorDataQoS());
-    noisy_pose_pub_ = node_->create_publisher<PoseStamped>(pose_output_topic, rclcpp::SensorDataQoS());
+    noisy_odom_pub_ = node_->create_publisher<Odometry>(
+        odom_output_topic, rclcpp::SensorDataQoS());
+    noisy_pose_pub_ = node_->create_publisher<PoseStamped>(
+        pose_output_topic, rclcpp::SensorDataQoS());
 
     // Initialize random number generator
     std::random_device rd;
     gen_ = std::mt19937(rd());
-
-    // If delay is enabled, create a timer to publish delayed messages
-    if (delay_ns_ > 0)
-    {
-        delay_timer_ = node_->create_wall_timer(
-            std::chrono::milliseconds(5),
-            std::bind(&RosOdomNoiseGenerator::delayTimerCallback, this));
-    }
 }
 
 RosOdomNoiseGenerator::~RosOdomNoiseGenerator()
@@ -81,143 +77,53 @@ RosOdomNoiseGenerator::~RosOdomNoiseGenerator()
 
 void RosOdomNoiseGenerator::odomCallback(const Odometry::SharedPtr msg)
 {
-    // Store the incoming odometry message
-    latest_odom_ = *msg;
-
-    // Process incoming odometry message
+    // Step 1: Apply noise (or pass through)
+    Odometry noisy_odom;
     if (noise_enabled_) {
-        applyNoise();
+        noisy_odom = applyNoise(*msg);
     } else {
-        // If noise is disabled, just republish the original messages
-        msg->header.frame_id = "noise_disabled";
-        msg->header.stamp = node_->now();
-
-        if (delay_ns_ > 0) {
-            // Buffer for delayed publishing
-            noisy_odom_buffer_.push_back(*msg);
-        } else {
-            noisy_odom_pub_->publish(*msg);
-
-            PoseStamped pose;
-            pose.header = msg->header;
-            pose.pose = msg->pose.pose;
-            noisy_pose_pub_->publish(pose);
-        }
+        noisy_odom = *msg;
+        noisy_odom.header.stamp = node_->now();
     }
-}
 
-void RosOdomNoiseGenerator::applyNoise()
-{
-    // Create noisy odometry message
-    Odometry noisy_odom = latest_odom_;
-
-    // Apply noise to position (x, y, z)
-    std::normal_distribution<double> pos_noise(0.0, noise_params_.pose_noise_stddev);
-    noisy_odom.pose.pose.position.x += pos_noise(gen_);
-    noisy_odom.pose.pose.position.y += pos_noise(gen_);
-    noisy_odom.pose.pose.position.z += pos_noise(gen_);
-
-    // Apply noise to linear velocity
-    std::normal_distribution<double> lin_vel_noise(0.0, noise_params_.linear_velocity_noise_stddev);
-    noisy_odom.twist.twist.linear.x += lin_vel_noise(gen_);
-    noisy_odom.twist.twist.linear.y += lin_vel_noise(gen_);
-    noisy_odom.twist.twist.linear.z += lin_vel_noise(gen_);
-
-    // Apply noise to quaternion using angle-axis representation
-    // 1. Convert quaternion to Eigen quaternion
-    Eigen::Quaterniond quat(
-        latest_odom_.pose.pose.orientation.w,
-        latest_odom_.pose.pose.orientation.x,
-        latest_odom_.pose.pose.orientation.y,
-        latest_odom_.pose.pose.orientation.z
-    );
-
-    // 2. Convert to angle-axis
-    Eigen::AngleAxisd angle_axis(quat);
-    double angle = angle_axis.angle();
-    Eigen::Vector3d axis = angle_axis.axis();
-
-    // 3. Apply noise to angle
-    std::normal_distribution<double> angle_noise(0.0, noise_params_.angle_noise_stddev);
-    angle += angle_noise(gen_);
-
-    // 4. Apply noise to axis
-    std::normal_distribution<double> axis_noise_x(0.0, noise_params_.axis_noise_stddev[0]);
-    std::normal_distribution<double> axis_noise_y(0.0, noise_params_.axis_noise_stddev[1]);
-    std::normal_distribution<double> axis_noise_z(0.0, noise_params_.axis_noise_stddev[2]);
-    axis.x() += axis_noise_x(gen_);
-    axis.y() += axis_noise_y(gen_);
-    axis.z() += axis_noise_z(gen_);
-
-    // 5. Normalize the axis
-    axis.normalize();
-
-    // 6. Create new angle-axis with noisy values
-    Eigen::AngleAxisd noisy_angle_axis(angle, axis);
-
-    // 7. Convert back to quaternion
-    Eigen::Quaterniond noisy_quat(noisy_angle_axis);
-
-    noisy_odom.header.stamp = node_->now();
-
-    // 8. Set the noisy quaternion in the message
-    noisy_odom.pose.pose.orientation.w = noisy_quat.w();
-    noisy_odom.pose.pose.orientation.x = noisy_quat.x();
-    noisy_odom.pose.pose.orientation.y = noisy_quat.y();
-    noisy_odom.pose.pose.orientation.z = noisy_quat.z();
-
-    // Apply noise to angular velocity
-    std::normal_distribution<double> ang_vel_noise(0.0, noise_params_.angular_velocity_noise_stddev);
-    noisy_odom.twist.twist.angular.x += ang_vel_noise(gen_);
-    noisy_odom.twist.twist.angular.y += ang_vel_noise(gen_);
-    noisy_odom.twist.twist.angular.z += ang_vel_noise(gen_);
-
-    if (delay_ns_ > 0) {
-        // Buffer the noisy odom for delayed publishing
-        noisy_odom_buffer_.push_back(noisy_odom);
-
-        // Prune old messages
-        auto latest_stamp = rclcpp::Time(noisy_odom.header.stamp);
-        while (!noisy_odom_buffer_.empty())
-        {
-            auto oldest_stamp = rclcpp::Time(noisy_odom_buffer_.front().header.stamp);
-            if ((latest_stamp - oldest_stamp).nanoseconds() > MAX_BUFFER_DURATION_NS)
-                noisy_odom_buffer_.pop_front();
-            else
-                break;
-        }
-    } else {
-        // No delay: publish immediately
+    // Step 2: If no delay, publish immediately at input rate (100 Hz)
+    if (delay_ns_ <= 0) {
         noisy_odom_pub_->publish(noisy_odom);
 
-        PoseStamped noisy_pose;
-        noisy_pose.header.stamp = node_->now();
-        noisy_pose.pose = noisy_odom.pose.pose;
-        noisy_pose_pub_->publish(noisy_pose);
-    }
-}
-
-void RosOdomNoiseGenerator::delayTimerCallback()
-{
-    publishDelayed();
-}
-
-void RosOdomNoiseGenerator::publishDelayed()
-{
-    if (noisy_odom_buffer_.size() < 2)
+        PoseStamped pose;
+        pose.header = noisy_odom.header;
+        pose.pose = noisy_odom.pose.pose;
+        noisy_pose_pub_->publish(pose);
         return;
+    }
 
-    // Target time = latest buffered time - delay
-    auto latest_stamp = rclcpp::Time(noisy_odom_buffer_.back().header.stamp);
+    // Step 3: Buffer noisy odom for delayed publishing
+    noisy_odom_buffer_.push_back(noisy_odom);
+
+    // Prune old messages beyond MAX_BUFFER_DURATION_NS
+    auto latest_stamp = rclcpp::Time(noisy_odom.header.stamp);
+    while (!noisy_odom_buffer_.empty())
+    {
+        auto oldest_stamp =
+            rclcpp::Time(noisy_odom_buffer_.front().header.stamp);
+        if ((latest_stamp - oldest_stamp).nanoseconds()
+            > MAX_BUFFER_DURATION_NS)
+            noisy_odom_buffer_.pop_front();
+        else
+            break;
+    }
+
+    // Step 4: Find and publish the interpolated message from delay_ms ago
+    //         This runs every callback => output rate = input rate (100 Hz)
     int64_t target_ns = latest_stamp.nanoseconds() - delay_ns_;
 
-    // Find two messages that bracket the target time
     int idx_before = -1;
     int idx_after = -1;
 
     for (size_t i = 0; i < noisy_odom_buffer_.size(); ++i)
     {
-        int64_t t = rclcpp::Time(noisy_odom_buffer_[i].header.stamp).nanoseconds();
+        int64_t t =
+            rclcpp::Time(noisy_odom_buffer_[i].header.stamp).nanoseconds();
         if (t <= target_ns)
         {
             idx_before = static_cast<int>(i);
@@ -229,6 +135,7 @@ void RosOdomNoiseGenerator::publishDelayed()
         }
     }
 
+    // Need both bracketing samples to interpolate
     if (idx_before < 0 || idx_after < 0)
         return;
 
@@ -254,6 +161,72 @@ void RosOdomNoiseGenerator::publishDelayed()
     delayed_pose.header = delayed_odom.header;
     delayed_pose.pose = delayed_odom.pose.pose;
     noisy_pose_pub_->publish(delayed_pose);
+}
+
+Odometry RosOdomNoiseGenerator::applyNoise(const Odometry& odom)
+{
+    Odometry noisy_odom = odom;
+
+    // Apply noise to position (x, y, z)
+    std::normal_distribution<double> pos_noise(
+        0.0, noise_params_.pose_noise_stddev);
+    noisy_odom.pose.pose.position.x += pos_noise(gen_);
+    noisy_odom.pose.pose.position.y += pos_noise(gen_);
+    noisy_odom.pose.pose.position.z += pos_noise(gen_);
+
+    // Apply noise to linear velocity
+    std::normal_distribution<double> lin_vel_noise(
+        0.0, noise_params_.linear_velocity_noise_stddev);
+    noisy_odom.twist.twist.linear.x += lin_vel_noise(gen_);
+    noisy_odom.twist.twist.linear.y += lin_vel_noise(gen_);
+    noisy_odom.twist.twist.linear.z += lin_vel_noise(gen_);
+
+    // Apply noise to quaternion using angle-axis representation
+    Eigen::Quaterniond quat(
+        odom.pose.pose.orientation.w,
+        odom.pose.pose.orientation.x,
+        odom.pose.pose.orientation.y,
+        odom.pose.pose.orientation.z
+    );
+
+    Eigen::AngleAxisd angle_axis(quat);
+    double angle = angle_axis.angle();
+    Eigen::Vector3d axis = angle_axis.axis();
+
+    std::normal_distribution<double> angle_noise(
+        0.0, noise_params_.angle_noise_stddev);
+    angle += angle_noise(gen_);
+
+    std::normal_distribution<double> axis_noise_x(
+        0.0, noise_params_.axis_noise_stddev[0]);
+    std::normal_distribution<double> axis_noise_y(
+        0.0, noise_params_.axis_noise_stddev[1]);
+    std::normal_distribution<double> axis_noise_z(
+        0.0, noise_params_.axis_noise_stddev[2]);
+    axis.x() += axis_noise_x(gen_);
+    axis.y() += axis_noise_y(gen_);
+    axis.z() += axis_noise_z(gen_);
+
+    axis.normalize();
+
+    Eigen::AngleAxisd noisy_angle_axis(angle, axis);
+    Eigen::Quaterniond noisy_quat(noisy_angle_axis);
+
+    noisy_odom.header.stamp = node_->now();
+
+    noisy_odom.pose.pose.orientation.w = noisy_quat.w();
+    noisy_odom.pose.pose.orientation.x = noisy_quat.x();
+    noisy_odom.pose.pose.orientation.y = noisy_quat.y();
+    noisy_odom.pose.pose.orientation.z = noisy_quat.z();
+
+    // Apply noise to angular velocity
+    std::normal_distribution<double> ang_vel_noise(
+        0.0, noise_params_.angular_velocity_noise_stddev);
+    noisy_odom.twist.twist.angular.x += ang_vel_noise(gen_);
+    noisy_odom.twist.twist.angular.y += ang_vel_noise(gen_);
+    noisy_odom.twist.twist.angular.z += ang_vel_noise(gen_);
+
+    return noisy_odom;
 }
 
 Odometry RosOdomNoiseGenerator::interpolate(
@@ -320,5 +293,4 @@ Odometry RosOdomNoiseGenerator::interpolate(
 
 void RosOdomNoiseGenerator::configure()
 {
-    // Configuration logic for noise parameters can be added here
 }
