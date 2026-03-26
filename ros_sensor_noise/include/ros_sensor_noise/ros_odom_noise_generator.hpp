@@ -46,11 +46,7 @@ class RosOdomNoiseGenerator
 
     void odomCallback(const Odometry::SharedPtr msg);
 
-    void applyNoise();
-
-    void delayTimerCallback();
-
-    void publishDelayed();
+    Odometry applyNoise(const Odometry& odom);
 
     Odometry interpolate(const Odometry& odom_a,
                          const Odometry& odom_b,
@@ -62,14 +58,10 @@ class RosOdomNoiseGenerator
     rclcpp::Subscription<Odometry>::SharedPtr odom_sub_;
     rclcpp::Publisher<Odometry>::SharedPtr noisy_odom_pub_;
     rclcpp::Publisher<PoseStamped>::SharedPtr noisy_pose_pub_;
-    rclcpp::TimerBase::SharedPtr delay_timer_{nullptr};
 
     // Noise parameters
     bool noise_enabled_{false};
     NoiseParameters noise_params_;
-
-    // Storage for latest odometry message
-    Odometry latest_odom_;
 
     // Random number generator
     std::mt19937 gen_;
