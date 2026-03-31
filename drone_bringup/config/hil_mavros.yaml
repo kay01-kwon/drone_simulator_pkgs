@@ -1,0 +1,36 @@
+# MAVROS config for HIL (USB connection to real PX4 board)
+/**:
+  ros__parameters:
+    # Connection (USB)
+    fcu_url: "/dev/ttyACM0:921600"
+    gcs_url: "udp://@14550"
+    target_system_id: 1
+    target_component_id: 1
+    fcu_protocol: "v2.0"
+
+    # TF
+    local_position:
+      frame_id: "world"
+      tf:
+        send: true
+        frame_id: "world"
+        child_frame_id: "base_link"
+
+    # Startup
+    conn:
+      timeout: 30.0
+
+    # Plugin enable/disable
+    plugin_allowlist:
+      - sys_status
+      - sys_time
+      - imu
+      - local_position
+      - vision_pose
+      - vision_speed
+      - odometry
+      - command
+      - param
+      - rc_io
+      - ftp
+      - hil

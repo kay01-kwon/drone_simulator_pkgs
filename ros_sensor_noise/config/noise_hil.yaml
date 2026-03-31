@@ -1,0 +1,14 @@
+/**:
+  ros__parameters:
+    topics:
+      odom_input: "/S550/ground_truth/odom"
+      odom_output: "/mavros/local_position/odom_sim"
+      pose_output: "/mavros/vision_pose/pose"
+    noise:
+      position_stddev: 0.005
+      angle_stddev: 0.003
+      axis_stddev: 0.05
+      linear_velocity_stddev: 0.05
+      angular_velocity_stddev: 0.08
+      apply_noise: true
+      delay_ms: 0.0  # PX4 EKF2 handles delay internally
