@@ -86,7 +86,7 @@
         <robotNamespace>S550</robotNamespace>
         <commandSubTopic>cmd_vel</commandSubTopic>
         <enableSubTopic>enable</enableSubTopic>
-        <comLinkName>S550/base_link</comLinkName>
+        <comLinkName>base_link</comLinkName>
         <velocityGain>2.7 2.7 2.7</velocityGain>
         <attitudeGain>2 3 0.15</attitudeGain>
         <angularRateGain>0.4 0.52 0.18</angularRateGain>

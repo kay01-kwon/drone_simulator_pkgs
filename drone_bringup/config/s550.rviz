@@ -57,7 +57,7 @@ Visualization Manager:
           Value: true
         S550/back_right:
           Value: true
-        S550/base_link:
+        base_link:
           Value: true
         S550/front_left:
           Value: true
@@ -87,7 +87,7 @@ Visualization Manager:
       Show Axes: true
       Show Names: false
       Tree:
-        S550/base_link:
+        base_link:
           S550/back_left:
             {}
           S550/back_right:
@@ -154,7 +154,7 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
-        S550/base_link:
+        base_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false

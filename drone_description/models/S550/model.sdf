@@ -5,7 +5,7 @@
     <pose>0 0 0 0 0 0</pose>
 
     <!-- Body link -->
-    <link name="S550/base_link">
+    <link name="base_link">
       <pose>0 0 0 0 0 0</pose>
       <inertial>
         <!-- Center of mass -->
@@ -21,7 +21,7 @@
           <izz>0.10317211827</izz>
         </inertia>
       </inertial>
-			<collision name="S550/base_link_collision">
+			<collision name="base_link_collision">
 				<pose>0 0 0 0 0 0</pose>
 				<geometry>
 					<box>
@@ -48,7 +48,7 @@
 					</friction>
 				</surface>
 			</collision>
-			<visual name="S550/base_link_visual">
+			<visual name="base_link_visual">
 				<pose>0 0 0 0 0 0</pose>
 				<geometry>
 					<mesh>
@@ -134,7 +134,7 @@
 
     <!-- Camera link -->
     <link name="bottom_screw_frame">
-      <pose relative_to="S550/base_link">
+      <pose relative_to="base_link">
         0.046 0 -0.088 
         0 0.52359877559 0
       </pose>
@@ -372,7 +372,7 @@
 
     <!-- Camera joint -->
     <joint name="bottom_screw_frame_joint" type="fixed">
-      <parent>S550/base_link</parent>
+      <parent>base_link</parent>
       <child>bottom_screw_frame</child>
     </joint>
 
@@ -658,7 +658,7 @@
       <!-- 1. Front left joint -->
       <joint name="S550/front_left_joint" type="revolute">
         <child>S550/front_left</child>
-        <parent>S550/base_link</parent>
+        <parent>base_link</parent>
         <axis>
           <xyz>0 0 1</xyz>
           <limit>
@@ -676,7 +676,7 @@
       <!-- 2. Left joint -->
       <joint name="S550/left_joint" type="revolute">
         <child>S550/left</child>
-        <parent>S550/base_link</parent>
+        <parent>base_link</parent>
         <axis>
           <xyz>0 0 1</xyz>
           <limit>
@@ -694,7 +694,7 @@
       <!-- 3. Back left joint -->
       <joint name="S550/back_left_joint" type="revolute">
         <child>S550/back_left</child>
-        <parent>S550/base_link</parent>
+        <parent>base_link</parent>
         <axis>
           <xyz>0 0 1</xyz>
           <limit>
@@ -712,7 +712,7 @@
       <!-- 4. Back right joint -->
       <joint name="S550/back_right_joint" type="revolute">
         <child>S550/back_right</child>
-        <parent>S550/base_link</parent>
+        <parent>base_link</parent>
         <axis>
           <xyz>0 0 1</xyz>
           <limit>
@@ -730,7 +730,7 @@
       <!-- 5. right joint -->
       <joint name="S550/right_joint" type="revolute">
         <child>S550/right</child>
-        <parent>S550/base_link</parent>
+        <parent>base_link</parent>
         <axis>
           <xyz>0 0 1</xyz>
           <limit>
@@ -748,7 +748,7 @@
       <!-- 6. Front right joint -->
       <joint name="S550/front_right_joint" type="revolute">
         <child>S550/front_right</child>
-        <parent>S550/base_link</parent>
+        <parent>base_link</parent>
         <axis>
           <xyz>0 0 1</xyz>
           <limit>
@@ -895,7 +895,7 @@
       filename="ignition-gazebo-odometry-publisher-system"
       name="ignition::gazebo::systems::OdometryPublisher">
         <odom_frame>S550/odom</odom_frame>
-        <robot_base_frame>S550/base_link</robot_base_frame>
+        <robot_base_frame>base_link</robot_base_frame>
         <dimensions>3</dimensions>
         <xyz_offset>0 0 0</xyz_offset>
         <rpy_offset>0 0 0</rpy_offset>
