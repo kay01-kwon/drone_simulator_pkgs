@@ -64,7 +64,7 @@ RosOdomNoiseGenerator::RosOdomNoiseGenerator()
     noisy_odom_pub_ = node_->create_publisher<Odometry>(
         odom_output_topic, rclcpp::SensorDataQoS());
     noisy_pose_pub_ = node_->create_publisher<PoseStamped>(
-        pose_output_topic, rclcpp::SensorDataQoS());
+        pose_output_topic, 10);
 
     // Initialize random number generator
     std::random_device rd;
