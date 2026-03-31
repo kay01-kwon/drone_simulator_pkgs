@@ -14,6 +14,7 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 
 from launch.substitutions import LaunchConfiguration
 from launch.substitutions import PathJoinSubstitution
+from launch.substitutions import PythonExpression
 
 from launch_ros.actions import Node
 
@@ -133,26 +134,24 @@ def generate_launch_description():
     # PX4 motor output goes to /model/S550/command/motor_speed (dead topic),
     # while actual motors subscribe to /S550/gazebo/command/motor_speed
     # driven by ros_motor_model. No conflict.
+    gz_resource_path = ':'.join([
+        os.path.join(pkg_prj_description, 'models'),
+        os.path.join(pkg_prj_gazebo, 'worlds'),
+    ])
+
     px4_sitl = ExecuteProcess(
         cmd=[
             'bash', '-c',
-            ' '.join([
-                'cd', LaunchConfiguration('px4_dir'), '&&',
-                'PX4_SYS_AUTOSTART=' + LaunchConfiguration(
-                    'px4_autostart').describe(),
-                'PX4_GZ_MODEL_NAME=S550',
-                'PX4_GZ_WORLD=S550_empty_world',
-                './build/px4_sitl_default/bin/px4',
-                '-d',
-            ])
+            [
+                'cd ', LaunchConfiguration('px4_dir'),
+                ' && PX4_SYS_AUTOSTART=', LaunchConfiguration('px4_autostart'),
+                ' PX4_GZ_MODEL_NAME=S550',
+                ' PX4_GZ_WORLD=S550_empty_world',
+                ' GZ_SIM_RESOURCE_PATH=', gz_resource_path,
+                ' ./build/px4_sitl_default/bin/px4 -d',
+            ]
         ],
         output='screen',
-        additional_env={
-            'GZ_SIM_RESOURCE_PATH': ':'.join([
-                os.path.join(pkg_prj_description, 'models'),
-                os.path.join(pkg_prj_gazebo, 'worlds'),
-            ]),
-        }
     )
 
     # --- MAVROS (provides /mavros/local_position/odom from PX4 EKF2) ---
