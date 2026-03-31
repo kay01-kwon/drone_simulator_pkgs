@@ -10,6 +10,8 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(mavros_msgs REQUIRED)
 find_package(Eigen3 REQUIRED)
 
 # Include directories
@@ -35,9 +37,22 @@ target_link_libraries(ros_odom_noise_generator
   Eigen3::Eigen
 )
 
+add_executable(gz_hil_bridge
+  src/hil_bridge_main.cpp
+  include/ros_sensor_noise/gz_hil_bridge.cpp
+)
+
+ament_target_dependencies(gz_hil_bridge
+  rclcpp
+  sensor_msgs
+  nav_msgs
+  mavros_msgs
+)
+
 # Install executable
 install(TARGETS
   ros_odom_noise_generator
+  gz_hil_bridge
   DESTINATION lib/${PROJECT_NAME}
 )
 
