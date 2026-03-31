@@ -1,15 +1,11 @@
+# ros_gz_bridge config for PX4 SITL mode
+# Motor commands are handled directly by PX4 gz_bridge (no ROS bridge needed)
 ---
 - ros_topic_name: "/clock"
   gz_topic_name: "/clock"
   ros_type_name: "rosgraph_msgs/msg/Clock"
   gz_type_name: "gz.msgs.Clock"
   direction: GZ_TO_ROS
-
-- ros_topic_name: "/S550/command/motor_speed"
-  gz_topic_name: "/model/S550/command/motor_speed"
-  ros_type_name: "actuator_msgs/msg/Actuators"
-  gz_type_name: "ignition.msgs.Actuators"
-  direction: ROS_TO_GZ
 
 - ros_topic_name: "/S550/ground_truth/odom"
   gz_topic_name: "/S550/ground_truth/odom"
