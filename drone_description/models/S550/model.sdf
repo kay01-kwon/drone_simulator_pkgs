@@ -768,6 +768,7 @@
       <plugin
       filename="ignition-gazebo-multicopter-motor-model-system"
       name="gz::sim::systems::MulticopterMotorModel">
+        <robotNamespace>S550</robotNamespace>
         <jointName>S550/front_left_joint</jointName>
         <linkName>S550/front_left</linkName>
         <turningDirection>ccw</turningDirection>
@@ -776,7 +777,7 @@
         <maxRotVelocity>838</maxRotVelocity>
         <motorConstant>1.2639e-05</motorConstant>
         <momentConstant>0.01569</momentConstant>
-        <commandSubTopic>command/motor_speed</commandSubTopic>
+        <commandSubTopic>gazebo/command/motor_speed</commandSubTopic>
         <motorNumber>0</motorNumber>
         <rotorDragCoefficient>8.06428e-05</rotorDragCoefficient>
         <rollingMomentCoefficient>1e-06</rollingMomentCoefficient>
@@ -788,6 +789,7 @@
       <plugin
       filename="ignition-gazebo-multicopter-motor-model-system"
       name="gz::sim::systems::MulticopterMotorModel">
+        <robotNamespace>S550</robotNamespace>
         <jointName>S550/left_joint</jointName>
         <linkName>S550/left</linkName>
         <turningDirection>cw</turningDirection>
@@ -796,7 +798,7 @@
         <maxRotVelocity>838</maxRotVelocity>
         <motorConstant>1.2639e-05</motorConstant>
         <momentConstant>0.01569</momentConstant>
-        <commandSubTopic>command/motor_speed</commandSubTopic>
+        <commandSubTopic>gazebo/command/motor_speed</commandSubTopic>
         <motorNumber>1</motorNumber>
         <rotorDragCoefficient>8.06428e-05</rotorDragCoefficient>
         <rollingMomentCoefficient>1e-06</rollingMomentCoefficient>
@@ -808,6 +810,7 @@
       <plugin
       filename="ignition-gazebo-multicopter-motor-model-system"
       name="gz::sim::systems::MulticopterMotorModel">
+        <robotNamespace>S550</robotNamespace>
         <jointName>S550/back_left_joint</jointName>
         <linkName>S550/back_left</linkName>
         <turningDirection>ccw</turningDirection>
@@ -816,7 +819,7 @@
         <maxRotVelocity>838</maxRotVelocity>
         <motorConstant>1.2639e-05</motorConstant>
         <momentConstant>0.01569</momentConstant>
-        <commandSubTopic>command/motor_speed</commandSubTopic>
+        <commandSubTopic>gazebo/command/motor_speed</commandSubTopic>
         <motorNumber>2</motorNumber>
         <rotorDragCoefficient>8.06428e-05</rotorDragCoefficient>
         <rollingMomentCoefficient>1e-06</rollingMomentCoefficient>
@@ -828,6 +831,7 @@
       <plugin
       filename="ignition-gazebo-multicopter-motor-model-system"
       name="gz::sim::systems::MulticopterMotorModel">
+        <robotNamespace>S550</robotNamespace>
         <jointName>S550/back_right_joint</jointName>
         <linkName>S550/back_right</linkName>
         <turningDirection>cw</turningDirection>
@@ -836,7 +840,7 @@
         <maxRotVelocity>838</maxRotVelocity>
         <motorConstant>1.2639e-05</motorConstant>
         <momentConstant>0.01569</momentConstant>
-        <commandSubTopic>command/motor_speed</commandSubTopic>
+        <commandSubTopic>gazebo/command/motor_speed</commandSubTopic>
         <motorNumber>3</motorNumber>
         <rotorDragCoefficient>8.06428e-05</rotorDragCoefficient>
         <rollingMomentCoefficient>1e-06</rollingMomentCoefficient>
@@ -848,6 +852,7 @@
       <plugin
       filename="ignition-gazebo-multicopter-motor-model-system"
       name="gz::sim::systems::MulticopterMotorModel">
+        <robotNamespace>S550</robotNamespace>
         <jointName>S550/right_joint</jointName>
         <linkName>S550/right</linkName>
         <turningDirection>ccw</turningDirection>
@@ -856,7 +861,7 @@
         <maxRotVelocity>838</maxRotVelocity>
         <motorConstant>1.2639e-05</motorConstant>
         <momentConstant>0.01569</momentConstant>
-        <commandSubTopic>command/motor_speed</commandSubTopic>
+        <commandSubTopic>gazebo/command/motor_speed</commandSubTopic>
         <motorNumber>4</motorNumber>
         <rotorDragCoefficient>8.06428e-05</rotorDragCoefficient>
         <rollingMomentCoefficient>1e-06</rollingMomentCoefficient>
@@ -868,6 +873,7 @@
       <plugin
       filename="ignition-gazebo-multicopter-motor-model-system"
       name="gz::sim::systems::MulticopterMotorModel">
+        <robotNamespace>S550</robotNamespace>
         <jointName>S550/front_right_joint</jointName>
         <linkName>S550/front_right</linkName>
         <turningDirection>cw</turningDirection>
@@ -876,7 +882,7 @@
         <maxRotVelocity>838</maxRotVelocity>
         <motorConstant>1.2639e-05</motorConstant>
         <momentConstant>0.01569</momentConstant>
-        <commandSubTopic>command/motor_speed</commandSubTopic>
+        <commandSubTopic>gazebo/command/motor_speed</commandSubTopic>
         <motorNumber>5</motorNumber>
         <rotorDragCoefficient>8.06428e-05</rotorDragCoefficient>
         <rollingMomentCoefficient>1e-06</rollingMomentCoefficient>
