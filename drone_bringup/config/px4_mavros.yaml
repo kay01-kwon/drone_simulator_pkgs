@@ -32,7 +32,6 @@
       - vision_pose
       - vision_speed
       - odometry
-      - hil
       - command
       - param
       - rc_io
