@@ -37,7 +37,7 @@ def generate_launch_description():
     # --- Declare launch arguments ---
     px4_dir_arg = DeclareLaunchArgument(
         'px4_dir',
-        default_value=os.path.expanduser('~/PX4-Autopilot'),
+        default_value=os.path.expanduser('~/Downloads/PX4-Autopilot'),
         description='Path to PX4-Autopilot directory'
     )
 
