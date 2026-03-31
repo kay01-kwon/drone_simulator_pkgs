@@ -6,6 +6,7 @@ from launch import LaunchDescription
 
 from launch.actions import DeclareLaunchArgument
 from launch.actions import IncludeLaunchDescription
+from launch.actions import ExecuteProcess
 
 from launch.conditions import IfCondition
 
@@ -23,20 +24,23 @@ def generate_launch_description():
     pkg_prj_description = get_package_share_directory('drone_description')
     pkg_prj_gazebo = get_package_share_directory('drone_gazebo')
     pkg_ros_motor_model = get_package_share_directory('ros_motor_model')
-    pkg_ros_sensor_noise = get_package_share_directory('ros_sensor_noise')
     pkg_ros_gz_sim = get_package_share_directory('ros_gz_sim')
 
     sdf_file = os.path.join(pkg_prj_description, 'models', 'S550', 'model.sdf')
     mavros_config = os.path.join(pkg_prj_bringup, 'config', 'px4_mavros.yaml')
     ros_second_order_motor_model_config = os.path.join(
         pkg_ros_motor_model, 'config', 'second_order_motor.yaml')
-    ros_sensor_noise_px4_config = os.path.join(
-        pkg_ros_sensor_noise, 'config', 'noise_px4.yaml')
 
     with open(sdf_file, 'r') as infp:
         robot_desc = infp.read()
 
     # --- Declare launch arguments ---
+    px4_dir_arg = DeclareLaunchArgument(
+        'px4_dir',
+        default_value=os.path.expanduser('~/PX4-Autopilot'),
+        description='Path to PX4-Autopilot directory'
+    )
+
     rviz_arg = DeclareLaunchArgument(
         'rviz', default_value='true',
         description='Open RViz2.'
@@ -55,7 +59,6 @@ def generate_launch_description():
     )
 
     # --- ros_gz_bridge ---
-    # Uses full bridge config (including motor command bridge for ros_motor_model)
     bridge = Node(
         package='ros_gz_bridge',
         executable='parameter_bridge',
@@ -107,8 +110,9 @@ def generate_launch_description():
     )
 
     # --- ros_motor_model (second order) ---
-    # Subscribes to /uav/cmd_raw, publishes /uav/actual_rpm
-    # Sends motor commands to Gazebo via ros_gz_bridge
+    # /uav/cmd_raw → motor model → /uav/actual_rpm + Gazebo motors
+    # Motor topic: /S550/gazebo/command/motor_speed (PX4 writes to
+    # /model/S550/command/motor_speed which is a dead topic → no conflict)
     ros_second_order_motor_model = Node(
         package='ros_motor_model',
         executable='ros_second_order_motor_model',
@@ -118,19 +122,33 @@ def generate_launch_description():
                     ]
     )
 
-    # --- ros_sensor_noise → /mavros/vision_pose/pose (ENU/FLU) ---
-    # Gazebo ground truth + noise → PX4 external vision input
-    # MAVROS automatically converts ENU→NED before sending to PX4
-    ros_sensor_noise = Node(
-        package='ros_sensor_noise',
-        executable='ros_odom_noise_generator',
+    # --- PX4 SITL ---
+    # PX4 gz_bridge reads Gazebo IMU directly for EKF2.
+    # EKF2 fuses simulated IMU → proper attitude + position estimation.
+    # RC input via QGC joystick → /mavros/rc/in
+    gz_resource_path = ':'.join([
+        os.path.join(pkg_prj_description, 'models'),
+        os.path.join(pkg_prj_gazebo, 'worlds'),
+    ])
+
+    px4_sitl = ExecuteProcess(
+        cmd=[
+            'bash', '-c',
+            [
+                'cd ', LaunchConfiguration('px4_dir'),
+                ' && PX4_SYS_AUTOSTART=6001',
+                ' PX4_GZ_MODEL_NAME=S550',
+                ' PX4_GZ_WORLD=S550_empty_world',
+                ' GZ_SIM_RESOURCE_PATH=', gz_resource_path,
+                ' ./build/px4_sitl_default/bin/px4 -d',
+            ]
+        ],
         output='screen',
-        parameters=[{'use_sim_time': False},
-                    ros_sensor_noise_px4_config
-                    ]
     )
 
-    # --- MAVROS (provides /mavros/local_position/odom from PX4 EKF2) ---
+    # --- MAVROS ---
+    # /mavros/local_position/odom  ← PX4 EKF2 출력
+    # /mavros/rc/in                ← QGC joystick RC 입력
     mavros_node = Node(
         package='mavros',
         executable='mavros_node',
@@ -152,6 +170,7 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
+        px4_dir_arg,
         rviz_arg,
         gz_sim,
         bridge,
@@ -161,6 +180,6 @@ def generate_launch_description():
         robot_state_publisher,
         rviz,
         ros_second_order_motor_model,
-        ros_sensor_noise,
+        px4_sitl,
         mavros_node,
     ])
