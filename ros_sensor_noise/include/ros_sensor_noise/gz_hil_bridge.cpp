@@ -42,21 +42,20 @@ void GzHilBridge::imuCallback(const Imu::SharedPtr msg)
     HilSensor hil;
     hil.header.stamp = node_->now();
 
-    // --- Accelerometer: ROS FLU → PX4 FRD ---
-    // FLU(x,y,z) → FRD(x,-y,-z)
-    hil.acc.x =  msg->linear_acceleration.x;
-    hil.acc.y = -msg->linear_acceleration.y;
-    hil.acc.z = -msg->linear_acceleration.z;
+    // --- Accelerometer: pass as FLU (MAVROS hil plugin converts to FRD) ---
+    hil.acc.x = msg->linear_acceleration.x;
+    hil.acc.y = msg->linear_acceleration.y;
+    hil.acc.z = msg->linear_acceleration.z;
 
-    // --- Gyroscope: ROS FLU → PX4 FRD ---
-    hil.gyro.x =  msg->angular_velocity.x;
-    hil.gyro.y = -msg->angular_velocity.y;
-    hil.gyro.z = -msg->angular_velocity.z;
+    // --- Gyroscope: pass as FLU (MAVROS hil plugin converts to FRD) ---
+    hil.gyro.x = msg->angular_velocity.x;
+    hil.gyro.y = msg->angular_velocity.y;
+    hil.gyro.z = msg->angular_velocity.z;
 
-    // --- Magnetometer (NED frame, Gauss) ---
-    hil.mag.x = mag_north_;
-    hil.mag.y = mag_east_;
-    hil.mag.z = mag_down_;
+    // --- Magnetometer (ENU frame, Gauss) - MAVROS converts to NED/FRD ---
+    hil.mag.x = mag_east_;
+    hil.mag.y = mag_north_;
+    hil.mag.z = -mag_down_;
 
     // --- Barometer from altitude ---
     // ISA: P = 1013.25 * (1 - 2.25577e-5 * h)^5.25588
