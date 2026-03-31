@@ -59,7 +59,7 @@
 			</visual>
       <sensor name="imu_sensor" type="imu">
         <always_on>1</always_on>
-        <topic>S550/imu</topic>
+
         <update_rate>200.0</update_rate>
         <imu>
           <angular_velocity>
