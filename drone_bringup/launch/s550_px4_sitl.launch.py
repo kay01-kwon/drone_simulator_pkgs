@@ -25,12 +25,15 @@ def generate_launch_description():
     pkg_prj_description = get_package_share_directory('drone_description')
     pkg_prj_gazebo = get_package_share_directory('drone_gazebo')
     pkg_ros_motor_model = get_package_share_directory('ros_motor_model')
+    pkg_ros_sensor_noise = get_package_share_directory('ros_sensor_noise')
     pkg_ros_gz_sim = get_package_share_directory('ros_gz_sim')
 
     sdf_file = os.path.join(pkg_prj_description, 'models', 'S550', 'model.sdf')
     mavros_config = os.path.join(pkg_prj_bringup, 'config', 'px4_mavros.yaml')
     ros_second_order_motor_model_config = os.path.join(
         pkg_ros_motor_model, 'config', 'second_order_motor.yaml')
+    ros_sensor_noise_px4_config = os.path.join(
+        pkg_ros_sensor_noise, 'config', 'noise_px4.yaml')
 
     with open(sdf_file, 'r') as infp:
         robot_desc = infp.read()
@@ -154,6 +157,17 @@ def generate_launch_description():
         output='screen',
     )
 
+    # --- ros_sensor_noise → /mavros/vision_pose/pose → PX4 EKF2 ---
+    # Ground truth + noise → PX4 external vision input
+    ros_sensor_noise = Node(
+        package='ros_sensor_noise',
+        executable='ros_odom_noise_generator',
+        output='screen',
+        parameters=[{'use_sim_time': False},
+                    ros_sensor_noise_px4_config
+                    ]
+    )
+
     # --- MAVROS (provides /mavros/local_position/odom from PX4 EKF2) ---
     mavros_node = Node(
         package='mavros',
@@ -187,6 +201,7 @@ def generate_launch_description():
         robot_state_publisher,
         rviz,
         ros_second_order_motor_model,
+        ros_sensor_noise,
         px4_sitl,
         mavros_node,
     ])
