@@ -6,7 +6,7 @@
   direction: GZ_TO_ROS
 
 - ros_topic_name: "/S550/command/motor_speed"
-  gz_topic_name: "/model/S550/command/motor_speed"
+  gz_topic_name: "/S550/gazebo/command/motor_speed"
   ros_type_name: "actuator_msgs/msg/Actuators"
   gz_type_name: "ignition.msgs.Actuators"
   direction: ROS_TO_GZ
