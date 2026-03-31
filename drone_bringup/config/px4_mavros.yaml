@@ -34,6 +34,8 @@
       - setpoint_position
       - setpoint_velocity
       - setpoint_attitude
+      - vision_pose
+      - odometry
       - command
       - param
       - rc_io
