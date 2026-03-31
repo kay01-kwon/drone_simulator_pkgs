@@ -136,7 +136,7 @@ def generate_launch_description():
             'bash', '-c',
             [
                 'cd ', LaunchConfiguration('px4_dir'),
-                ' && PX4_SYS_AUTOSTART=6001',
+                ' && PX4_SYS_AUTOSTART=4100',
                 ' PX4_GZ_MODEL_NAME=S550',
                 ' PX4_GZ_WORLD=S550_empty_world',
                 ' GZ_SIM_RESOURCE_PATH=', gz_resource_path,
