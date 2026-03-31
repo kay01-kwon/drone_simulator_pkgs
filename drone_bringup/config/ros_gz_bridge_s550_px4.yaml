@@ -19,7 +19,7 @@
   gz_type_name: "gz.msgs.Model"
 
 - ros_topic_name: "/S550/imu"
-  gz_topic_name: "/S550/imu"
+  gz_topic_name: "/world/S550_world/model/S550/link/base_link/sensor/imu_sensor/imu"
   ros_type_name: "sensor_msgs/msg/Imu"
   gz_type_name: "ignition.msgs.IMU"
   direction: GZ_TO_ROS
