@@ -66,7 +66,7 @@
             <x>
               <noise type="gaussian">
                 <mean>0.0</mean>
-                <stddev>6.63e-4</stddev>
+                <stddev>4.89e-4</stddev>
                 <bias_mean>0.0</bias_mean>
                 <bias_stddev>0.0</bias_stddev>
                 <dynamic_bias_stddev>1.5e-4</dynamic_bias_stddev>
@@ -76,7 +76,7 @@
             <y>
               <noise type="gaussian">
                 <mean>0.0</mean>
-                <stddev>6.63e-4</stddev>
+                <stddev>4.89e-4</stddev>
                 <bias_mean>0.0</bias_mean>
                 <bias_stddev>0.0</bias_stddev>
                 <dynamic_bias_stddev>1.5e-4</dynamic_bias_stddev>
@@ -86,7 +86,7 @@
             <z>
               <noise type="gaussian">
                 <mean>0.0</mean>
-                <stddev>6.63e-4</stddev>
+                <stddev>4.89e-4</stddev>
                 <bias_mean>0.0</bias_mean>
                 <bias_stddev>0.0</bias_stddev>
                 <dynamic_bias_stddev>1.5e-4</dynamic_bias_stddev>
@@ -98,7 +98,7 @@
             <x>
               <noise type="gaussian">
                 <mean>0.0</mean>
-                <stddev>6.86e-3</stddev>
+                <stddev>6.37e-3</stddev>
                 <bias_mean>0.0</bias_mean>
                 <bias_stddev>0.0</bias_stddev>
                 <dynamic_bias_stddev>8.0e-3</dynamic_bias_stddev>
@@ -108,7 +108,7 @@
             <y>
               <noise type="gaussian">
                 <mean>0.0</mean>
-                <stddev>6.86e-3</stddev>
+                <stddev>6.37e-3</stddev>
                 <bias_mean>0.0</bias_mean>
                 <bias_stddev>0.0</bias_stddev>
                 <dynamic_bias_stddev>8.0e-3</dynamic_bias_stddev>
@@ -118,7 +118,7 @@
             <z>
               <noise type="gaussian">
                 <mean>0.0</mean>
-                <stddev>6.86e-3</stddev>
+                <stddev>6.87e-3</stddev>
                 <bias_mean>0.0</bias_mean>
                 <bias_stddev>0.0</bias_stddev>
                 <dynamic_bias_stddev>8.0e-3</dynamic_bias_stddev>
