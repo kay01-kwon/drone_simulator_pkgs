@@ -915,7 +915,7 @@
       filename="ignition-gazebo-odometry-publisher-system"
       name="ignition::gazebo::systems::OdometryPublisher">
         <odom_frame>S550/odom</odom_frame>
-        <robot_base_frame>imu_link</robot_base_frame>
+        <robot_base_frame>base_link</robot_base_frame>
         <dimensions>3</dimensions>
         <xyz_offset>0 0 0</xyz_offset>
         <rpy_offset>0 0 0</rpy_offset>
