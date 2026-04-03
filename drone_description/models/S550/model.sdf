@@ -57,9 +57,24 @@
 					</mesh>
 				</geometry>
 			</visual>
+		</link>
+
+    <!-- IMU link (52mm above base_link) -->
+    <link name="imu_link">
+      <pose relative_to="base_link">0 0 0.052 0 0 0</pose>
+      <inertial>
+        <mass>0.001</mass>
+        <inertia>
+          <ixx>1e-9</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>1e-9</iyy>
+          <iyz>0</iyz>
+          <izz>1e-9</izz>
+        </inertia>
+      </inertial>
       <sensor name="imu_sensor" type="imu">
         <always_on>1</always_on>
-
         <update_rate>200.0</update_rate>
         <imu>
           <angular_velocity>
@@ -130,7 +145,12 @@
         <always_on>true</always_on>
         <visualize>false</visualize>
       </sensor>
-		</link>
+    </link>
+
+    <joint name="imu_joint" type="fixed">
+      <parent>base_link</parent>
+      <child>imu_link</child>
+    </joint>
 
     <!-- Camera link -->
     <link name="bottom_screw_frame">
