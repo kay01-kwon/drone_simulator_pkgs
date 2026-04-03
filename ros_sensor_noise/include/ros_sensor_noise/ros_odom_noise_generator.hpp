@@ -66,6 +66,9 @@ class RosOdomNoiseGenerator
     // Random number generator
     std::mt19937 gen_;
 
+    // Position offset (e.g., IMU mount offset from base_link)
+    double z_offset_{0.0};
+
     // Pure delay buffer and parameters
     double delay_ms_{0.0};
     int64_t delay_ns_{0};

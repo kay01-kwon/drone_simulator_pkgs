@@ -21,6 +21,9 @@ RosOdomNoiseGenerator::RosOdomNoiseGenerator()
     // Declare delay parameter
     node_->declare_parameter("noise.delay_ms", 0.0);
 
+    // Declare position offset parameter
+    node_->declare_parameter("noise.z_offset", 0.0);
+
     // Load topic parameters
     std::string odom_input_topic = node_->get_parameter("topics.odom_input").as_string();
     std::string odom_output_topic = node_->get_parameter("topics.odom_output").as_string();
@@ -41,6 +44,9 @@ RosOdomNoiseGenerator::RosOdomNoiseGenerator()
     delay_ms_ = node_->get_parameter("noise.delay_ms").as_double();
     delay_ns_ = static_cast<int64_t>(delay_ms_ * 1e6);
 
+    // Load position offset
+    z_offset_ = node_->get_parameter("noise.z_offset").as_double();
+
     RCLCPP_INFO(node_->get_logger(), "=== Topic Configuration ===");
     RCLCPP_INFO(node_->get_logger(), "Odometry input topic: %s", odom_input_topic.c_str());
     RCLCPP_INFO(node_->get_logger(), "Odometry output topic: %s", odom_output_topic.c_str());
@@ -54,6 +60,8 @@ RosOdomNoiseGenerator::RosOdomNoiseGenerator()
     RCLCPP_INFO(node_->get_logger(), "Angular velocity noise stddev: %.6f", noise_params_.angular_velocity_noise_stddev);
     RCLCPP_INFO(node_->get_logger(), "=== Delay Configuration ===");
     RCLCPP_INFO(node_->get_logger(), "Pure delay: %.1f ms", delay_ms_);
+    RCLCPP_INFO(node_->get_logger(), "=== Offset Configuration ===");
+    RCLCPP_INFO(node_->get_logger(), "Z offset: %.4f m", z_offset_);
 
     // Create subscriber and publishers
     odom_sub_ = node_->create_subscription<Odometry>(
@@ -77,12 +85,18 @@ RosOdomNoiseGenerator::~RosOdomNoiseGenerator()
 
 void RosOdomNoiseGenerator::odomCallback(const Odometry::SharedPtr msg)
 {
+    // Step 0: Apply position offset (base_link → imu_link)
+    Odometry offset_odom = *msg;
+    if (std::abs(z_offset_) > 1e-6) {
+        offset_odom.pose.pose.position.z += z_offset_;
+    }
+
     // Step 1: Apply noise (or pass through)
     Odometry noisy_odom;
     if (noise_enabled_) {
-        noisy_odom = applyNoise(*msg);
+        noisy_odom = applyNoise(offset_odom);
     } else {
-        noisy_odom = *msg;
+        noisy_odom = offset_odom;
         noisy_odom.header.stamp = node_->now();
     }
 
