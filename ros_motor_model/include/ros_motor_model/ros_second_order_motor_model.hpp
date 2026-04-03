@@ -73,6 +73,8 @@ class RosSecondOrderMotorModelNode : public rclcpp::Node
 
     bool is_time_initialized_{false};
 
+    bool cmd_raw_received_{false};
+
     // Noise parameters
     bool noise_enabled_{false};
     double noise_mean_{0.0};

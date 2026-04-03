@@ -124,11 +124,13 @@ RosSecondOrderMotorModelNode::~RosSecondOrderMotorModelNode()
 void RosSecondOrderMotorModelNode::callback_cmd_raw_quad(const QuadCmdRaw::SharedPtr msg)
 {
     quad_cmd_raw_msg_ = *msg;
+    cmd_raw_received_ = true;
 }
 
 void RosSecondOrderMotorModelNode::callback_cmd_raw_hexa(const HexaCmdRaw::SharedPtr msg)
 {
     hexa_cmd_raw_msg_ = *msg;
+    cmd_raw_received_ = true;
 }
 
 void RosSecondOrderMotorModelNode::publish_motor_velocity()
@@ -161,8 +163,14 @@ void RosSecondOrderMotorModelNode::publish_motor_velocity()
 
                 // Gazebo ROS interface expects rad/s
                 actuators_msg_.velocity.at(i) = actual_rpm * RPM_TO_RPS;
-                // Add noise if enabled
-                if (noise_enabled_)
+
+                // Skip noise when cmd_raw not received or cmd_raw is zero
+                if (!cmd_raw_received_ || quad_cmd_raw_msg_.cmd_raw[i] == 0)
+                {
+                    actual_rpm = 0.0;
+                    actuators_msg_.velocity.at(i) = 0.0;
+                }
+                else if (noise_enabled_)
                 {
                     double noise = noise_distribution_(random_generator_);
                     actual_rpm += noise;
@@ -187,11 +195,17 @@ void RosSecondOrderMotorModelNode::publish_motor_velocity()
 
                 motor_models_.at(i)->set_state(cmd_rpm, time_curr_);
                 motor_models_.at(i)->get_state(actual_rpm);
-                
+
                 // Gazebo ROS interface expects rad/s
                 actuators_msg_.velocity.at(i) = actual_rpm * RPM_TO_RPS;
-                // Add noise if enabled
-                if (noise_enabled_)
+
+                // Skip noise when cmd_raw not received or cmd_raw is zero
+                if (!cmd_raw_received_ || hexa_cmd_raw_msg_.cmd_raw[i] == 0)
+                {
+                    actual_rpm = 0.0;
+                    actuators_msg_.velocity.at(i) = 0.0;
+                }
+                else if (noise_enabled_)
                 {
                     double noise = noise_distribution_(random_generator_);
                     actual_rpm += noise;
