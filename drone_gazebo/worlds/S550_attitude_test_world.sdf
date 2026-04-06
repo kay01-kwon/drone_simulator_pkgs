@@ -87,6 +87,15 @@
           </inertia>
         </inertial>
       </link>
+      <link name="roll_link">
+        <inertial>
+          <mass>0.001</mass>
+          <inertia>
+            <ixx>1e-9</ixx><iyy>1e-9</iyy><izz>1e-9</izz>
+            <ixy>0</ixy><ixz>0</ixz><iyz>0</iyz>
+          </inertia>
+        </inertial>
+      </link>
       <joint name="anchor_to_world" type="fixed">
         <parent>world</parent>
         <child>anchor_link</child>
@@ -94,9 +103,39 @@
       <include merge="true">
         <uri>package://drone_description/models/S550</uri>
       </include>
-      <joint name="attitude_test_joint" type="ball">
+      <!-- Roll joint: rotate about X, ±30 deg -->
+      <joint name="roll_joint" type="revolute">
         <parent>anchor_link</parent>
+        <child>roll_link</child>
+        <axis>
+          <xyz>1 0 0</xyz>
+          <limit>
+            <lower>-0.5236</lower>
+            <upper>0.5236</upper>
+            <effort>1000</effort>
+            <velocity>100</velocity>
+          </limit>
+          <dynamics>
+            <damping>0.01</damping>
+          </dynamics>
+        </axis>
+      </joint>
+      <!-- Pitch joint: rotate about Y, ±30 deg -->
+      <joint name="pitch_joint" type="revolute">
+        <parent>roll_link</parent>
         <child>base_link</child>
+        <axis>
+          <xyz>0 1 0</xyz>
+          <limit>
+            <lower>-0.5236</lower>
+            <upper>0.5236</upper>
+            <effort>1000</effort>
+            <velocity>100</velocity>
+          </limit>
+          <dynamics>
+            <damping>0.01</damping>
+          </dynamics>
+        </axis>
       </joint>
     </model>
 
