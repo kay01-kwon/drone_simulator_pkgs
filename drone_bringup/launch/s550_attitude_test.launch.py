@@ -61,7 +61,7 @@ def generate_launch_description():
             {'use_sim_time': True},
             {'config_file': os.path.join(
                 pkg_prj_bringup, 'config',
-                'ros_gz_bridge_s550.yaml')},
+                'ros_gz_bridge_s550_attitude.yaml')},
             {'qos_overrides./tf_static.publisher.history.durability':
                 'transient_local'},
         ],
