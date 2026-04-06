@@ -27,7 +27,8 @@ def generate_launch_description():
     pkg_ros_gz_sim = get_package_share_directory('ros_gz_sim')
 
     sdf_file = os.path.join(pkg_prj_description, 'models', 'S550', 'model.sdf')
-    noise_config = os.path.join(pkg_ros_sensor_noise, 'config', 'noise.yaml')
+    mavros_config = os.path.join(pkg_prj_bringup, 'config', 'hil_mavros.yaml')
+    noise_config = os.path.join(pkg_ros_sensor_noise, 'config', 'noise_hil.yaml')
     ros_second_order_motor_model_config = os.path.join(
         pkg_ros_motor_model, 'config', 'second_order_motor.yaml')
 
@@ -113,6 +114,14 @@ def generate_launch_description():
                     ]
     )
 
+    # --- GZ HIL Bridge ---
+    gz_hil_bridge = Node(
+        package='ros_sensor_noise',
+        executable='gz_hil_bridge',
+        output='screen',
+        parameters=[{'use_sim_time': False}]
+    )
+
     # --- Odom Noise Generator ---
     ros_odom_noise = Node(
         package='ros_sensor_noise',
@@ -121,6 +130,17 @@ def generate_launch_description():
         parameters=[{'use_sim_time': False},
                     noise_config
                     ]
+    )
+
+    # --- MAVROS (USB connection to real PX4 board) ---
+    mavros_node = Node(
+        package='mavros',
+        executable='mavros_node',
+        output='screen',
+        parameters=[
+            mavros_config,
+            {'use_sim_time': False},
+        ]
     )
 
     # --- RViz ---
@@ -143,5 +163,7 @@ def generate_launch_description():
         robot_state_publisher,
         rviz,
         ros_second_order_motor_model,
+        gz_hil_bridge,
         ros_odom_noise,
+        mavros_node,
     ])
