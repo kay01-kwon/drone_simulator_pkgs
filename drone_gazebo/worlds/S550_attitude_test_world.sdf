@@ -74,26 +74,17 @@
       </link>
     </model>
 
-    <!-- Test stand: fixed pivot point -->
-    <model name="test_stand">
-      <static>true</static>
-      <link name="stand_link">
-        <pose>0 0 1.0 0 0 0</pose>
-      </link>
-    </model>
-
+    <!-- Ball joint: position fixed (world frame), rotation free (roll/pitch/yaw) -->
     <model name="S550">
       <pose>0 0 1.0 0 0 0</pose>
       <include merge="true">
         <uri>package://drone_description/models/S550</uri>
       </include>
+      <joint name="attitude_test_joint" type="ball">
+        <parent>world</parent>
+        <child>base_link</child>
+      </joint>
     </model>
-
-    <!-- Ball joint: position fixed, rotation free (roll/pitch/yaw) -->
-    <joint name="attitude_test_joint" type="ball">
-      <parent>test_stand::stand_link</parent>
-      <child>S550::base_link</child>
-    </joint>
 
     </world>
 </sdf>
