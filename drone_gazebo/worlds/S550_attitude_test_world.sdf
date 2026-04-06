@@ -76,7 +76,7 @@
 
     <!-- Wrapper model: anchor_link is fixed to world, ball joint connects
          anchor_link to S550 base_link so position is fixed but rotation free -->
-    <model name="attitude_test_rig">
+    <model name="S550">
       <pose>0 0 1.0 0 0 0</pose>
       <link name="anchor_link">
         <inertial>
