@@ -74,14 +74,11 @@
       </link>
     </model>
 
-    <!-- Attitude test rig: ball joint pivot is 152 mm BELOW base_link,
-         raised 0.5 m above ground and visualized as a red sphere on a
-         thin stand. Initially the DetachableJoint plugin also creates
-         a fixed joint between anchor_link and base_link, so the drone
-         starts rigidly aligned with the world frame. Publishing any
-         message to /attitude_jig/detach releases the fixed joint,
-         leaving only the ball joint -> free 3-DOF rotation (simulates
-         "releasing from hand"). -->
+    <!-- Attitude test rig: roll/pitch pivot is 152 mm BELOW base_link,
+         yaw is fixed. The pivot is raised to 0.5 m above ground and
+         visualized as a red sphere atop a thin stand. roll (X-axis)
+         and pitch (Y-axis) revolute joints share that pivot and are
+         clamped to +/-25 deg. -->
     <model name="attitude_test_rig">
       <pose>0 0 0.5 0 0 0</pose>
       <link name="anchor_link">
@@ -122,6 +119,15 @@
           </material>
         </visual>
       </link>
+      <link name="roll_link">
+        <inertial>
+          <mass>0.001</mass>
+          <inertia>
+            <ixx>1e-9</ixx><iyy>1e-9</iyy><izz>1e-9</izz>
+            <ixy>0</ixy><ixz>0</ixz><iyz>0</iyz>
+          </inertia>
+        </inertial>
+      </link>
       <joint name="anchor_to_world" type="fixed">
         <parent>world</parent>
         <child>anchor_link</child>
@@ -130,23 +136,42 @@
         <uri>package://drone_description/models/S550</uri>
         <pose>0 0 0.152 0 0 0</pose>
       </include>
-      <!-- Ball joint: always active, pivot 152 mm below base_link origin -->
-      <joint name="attitude_test_joint" type="ball">
+      <!-- Roll joint: rotate about X through pivot, +/-25 deg -->
+      <joint name="roll_joint" type="revolute">
         <parent>anchor_link</parent>
+        <child>roll_link</child>
+        <axis>
+          <xyz>1 0 0</xyz>
+          <limit>
+            <lower>-0.4363</lower>
+            <upper>0.4363</upper>
+            <effort>1000</effort>
+            <velocity>100</velocity>
+          </limit>
+          <dynamics>
+            <damping>0.01</damping>
+          </dynamics>
+        </axis>
+      </joint>
+      <!-- Pitch joint: rotate about Y through pivot (152mm below
+           base_link origin), +/-25 deg -->
+      <joint name="pitch_joint" type="revolute">
+        <parent>roll_link</parent>
         <child>base_link</child>
         <pose>0 0 -0.152 0 0 0</pose>
+        <axis>
+          <xyz>0 1 0</xyz>
+          <limit>
+            <lower>-0.4363</lower>
+            <upper>0.4363</upper>
+            <effort>1000</effort>
+            <velocity>100</velocity>
+          </limit>
+          <dynamics>
+            <damping>0.01</damping>
+          </dynamics>
+        </axis>
       </joint>
-      <!-- Detachable fixed joint: initially locks rotation so the drone
-           is rigidly aligned with world. Publish to /attitude_jig/detach
-           (gz.msgs.Empty) to release -> ball joint only -> free rotation. -->
-      <plugin
-        filename="ignition-gazebo-detachable-joint-system"
-        name="ignition::gazebo::systems::DetachableJoint">
-        <parent_link>anchor_link</parent_link>
-        <child_model>__model__</child_model>
-        <child_link>base_link</child_link>
-        <topic>/attitude_jig/detach</topic>
-      </plugin>
     </model>
 
     </world>
