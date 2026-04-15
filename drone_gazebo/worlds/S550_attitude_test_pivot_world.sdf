@@ -1,0 +1,110 @@
+<?xml version="1.0" ?>
+<sdf version="1.8">
+  <world name="S550_world">
+    <physics name="5ms" type="ode">
+      <max_step_size>0.005</max_step_size>
+      <real_time_factor>1.00</real_time_factor>
+      <real_time_update_rate>200</real_time_update_rate>
+    </physics>
+
+    <plugin
+      filename="ignition-gazebo-physics-system"
+      name="gz::sim::systems::Physics">
+    </plugin>
+
+    <plugin
+      filename="ignition-gazebo-scene-broadcaster-system"
+      name="gz::sim::systems::SceneBroadcaster">
+    </plugin>
+
+    <plugin
+      filename="ignition-gazebo-user-commands-system"
+      name="gz::sim::systems::UserCommands">
+    </plugin>
+
+    <plugin
+      filename="ignition-gazebo-sensors-system"
+      name="ignition::gazebo::systems::Sensors">
+      <render_engine>ogre</render_engine>
+    </plugin>
+
+    <plugin
+      filename="ignition-gazebo-imu-system"
+      name="ignition::gazebo::systems::Imu">
+    </plugin>
+
+    <light type="directional" name="sun">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <attenuation>
+        <range>1000</range>
+        <constant>0.9</constant>
+        <linear>0.01</linear>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <direction>-0.5 0.1 -0.9</direction>
+    </light>
+
+    <model name="ground_plane">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>100 100</size>
+            </plane>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>100 100</size>
+            </plane>
+          </geometry>
+          <material>
+            <ambient>0.8 0.8 0.8 1</ambient>
+            <diffuse>0.8 0.8 0.8 1</diffuse>
+            <specular>0.8 0.8 0.8 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Attitude test rig: ball joint pivot is 152 mm BELOW base_link.
+         anchor_link is fixed to world at the pivot position; base_link
+         is connected via a ball joint whose pivot (joint origin in child
+         frame) sits 152 mm below base_link origin, mimicking a jig with
+         a gimbal pivot under the drone. -->
+    <model name="attitude_test_rig">
+      <pose>0 0 0.152 0 0 0</pose>
+      <link name="anchor_link">
+        <inertial>
+          <mass>0.001</mass>
+          <inertia>
+            <ixx>1e-9</ixx><iyy>1e-9</iyy><izz>1e-9</izz>
+            <ixy>0</ixy><ixz>0</ixz><iyz>0</iyz>
+          </inertia>
+        </inertial>
+      </link>
+      <joint name="anchor_to_world" type="fixed">
+        <parent>world</parent>
+        <child>anchor_link</child>
+      </joint>
+      <include merge="true">
+        <uri>package://drone_description/models/S550</uri>
+        <pose>0 0 0.152 0 0 0</pose>
+      </include>
+      <!-- Ball joint: pivot 152 mm below base_link origin, full 3-DOF rotation -->
+      <joint name="attitude_test_joint" type="ball">
+        <parent>anchor_link</parent>
+        <child>base_link</child>
+        <pose>0 0 -0.152 0 0 0</pose>
+      </joint>
+    </model>
+
+    </world>
+</sdf>
