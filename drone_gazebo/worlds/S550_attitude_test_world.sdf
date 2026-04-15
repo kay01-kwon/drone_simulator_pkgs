@@ -86,6 +86,35 @@
             <ixy>0</ixy><ixz>0</ixz><iyz>0</iyz>
           </inertia>
         </inertial>
+        <!-- Stand: thin cylinder from ground up to the pivot -->
+        <visual name="stand_visual">
+          <pose>0 0 -0.5 0 0 0</pose>
+          <geometry>
+            <cylinder>
+              <radius>0.015</radius>
+              <length>1.0</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>0.3 0.3 0.3 1</ambient>
+            <diffuse>0.3 0.3 0.3 1</diffuse>
+            <specular>0.2 0.2 0.2 1</specular>
+          </material>
+        </visual>
+        <!-- Ball joint pivot sphere at anchor origin -->
+        <visual name="pivot_sphere_visual">
+          <pose>0 0 0 0 0 0</pose>
+          <geometry>
+            <sphere>
+              <radius>0.025</radius>
+            </sphere>
+          </geometry>
+          <material>
+            <ambient>0.8 0.1 0.1 1</ambient>
+            <diffuse>0.9 0.1 0.1 1</diffuse>
+            <specular>0.5 0.5 0.5 1</specular>
+          </material>
+        </visual>
       </link>
       <link name="roll_link">
         <inertial>
