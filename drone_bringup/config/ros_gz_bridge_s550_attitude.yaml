@@ -33,11 +33,3 @@
   ros_type_name: "tf2_msgs/msg/TFMessage"
   gz_type_name: "gz.msgs.Pose_V"
   direction: GZ_TO_ROS
-
-# Publish any message here to release the attitude jig lock and let
-# the drone rotate freely (ball joint only). One-way ROS -> GZ.
-- ros_topic_name: "/attitude_jig/detach"
-  gz_topic_name: "/attitude_jig/detach"
-  ros_type_name: "std_msgs/msg/Empty"
-  gz_type_name: "gz.msgs.Empty"
-  direction: ROS_TO_GZ
