@@ -75,11 +75,12 @@
     </model>
 
     <!-- Attitude test rig: roll/pitch pivot is 152 mm BELOW base_link,
-         yaw is fixed. anchor_link is fixed to world at the pivot
-         position; roll (X-axis) and pitch (Y-axis) revolute joints
-         share that pivot and are clamped to +/-25 deg. -->
+         yaw is fixed. The pivot is raised to 0.5 m above ground and
+         visualized as a red sphere atop a thin stand. roll (X-axis)
+         and pitch (Y-axis) revolute joints share that pivot and are
+         clamped to +/-25 deg. -->
     <model name="attitude_test_rig">
-      <pose>0 0 0.152 0 0 0</pose>
+      <pose>0 0 0.5 0 0 0</pose>
       <link name="anchor_link">
         <inertial>
           <mass>0.001</mass>
@@ -88,6 +89,35 @@
             <ixy>0</ixy><ixz>0</ixz><iyz>0</iyz>
           </inertia>
         </inertial>
+        <!-- Stand: thin cylinder from ground up to the pivot -->
+        <visual name="stand_visual">
+          <pose>0 0 -0.25 0 0 0</pose>
+          <geometry>
+            <cylinder>
+              <radius>0.015</radius>
+              <length>0.5</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>0.3 0.3 0.3 1</ambient>
+            <diffuse>0.3 0.3 0.3 1</diffuse>
+            <specular>0.2 0.2 0.2 1</specular>
+          </material>
+        </visual>
+        <!-- Ball joint pivot sphere at anchor origin -->
+        <visual name="pivot_sphere_visual">
+          <pose>0 0 0 0 0 0</pose>
+          <geometry>
+            <sphere>
+              <radius>0.025</radius>
+            </sphere>
+          </geometry>
+          <material>
+            <ambient>0.8 0.1 0.1 1</ambient>
+            <diffuse>0.9 0.1 0.1 1</diffuse>
+            <specular>0.5 0.5 0.5 1</specular>
+          </material>
+        </visual>
       </link>
       <link name="roll_link">
         <inertial>
