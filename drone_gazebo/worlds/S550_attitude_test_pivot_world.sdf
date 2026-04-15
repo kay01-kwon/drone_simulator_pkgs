@@ -74,14 +74,22 @@
       </link>
     </model>
 
-    <!-- Attitude test rig: ball joint pivot is 152 mm BELOW base_link.
-         anchor_link is fixed to world at the pivot position; base_link
-         is connected via a ball joint whose pivot (joint origin in child
-         frame) sits 152 mm below base_link origin, mimicking a jig with
-         a gimbal pivot under the drone. -->
+    <!-- Attitude test rig: roll/pitch pivot is 152 mm BELOW base_link,
+         yaw is fixed. anchor_link is fixed to world at the pivot
+         position; roll (X-axis) and pitch (Y-axis) revolute joints
+         share that pivot and are clamped to +/-25 deg. -->
     <model name="attitude_test_rig">
       <pose>0 0 0.152 0 0 0</pose>
       <link name="anchor_link">
+        <inertial>
+          <mass>0.001</mass>
+          <inertia>
+            <ixx>1e-9</ixx><iyy>1e-9</iyy><izz>1e-9</izz>
+            <ixy>0</ixy><ixz>0</ixz><iyz>0</iyz>
+          </inertia>
+        </inertial>
+      </link>
+      <link name="roll_link">
         <inertial>
           <mass>0.001</mass>
           <inertia>
@@ -98,11 +106,41 @@
         <uri>package://drone_description/models/S550</uri>
         <pose>0 0 0.152 0 0 0</pose>
       </include>
-      <!-- Ball joint: pivot 152 mm below base_link origin, full 3-DOF rotation -->
-      <joint name="attitude_test_joint" type="ball">
+      <!-- Roll joint: rotate about X through pivot, +/-25 deg -->
+      <joint name="roll_joint" type="revolute">
         <parent>anchor_link</parent>
+        <child>roll_link</child>
+        <axis>
+          <xyz>1 0 0</xyz>
+          <limit>
+            <lower>-0.4363</lower>
+            <upper>0.4363</upper>
+            <effort>1000</effort>
+            <velocity>100</velocity>
+          </limit>
+          <dynamics>
+            <damping>0.01</damping>
+          </dynamics>
+        </axis>
+      </joint>
+      <!-- Pitch joint: rotate about Y through pivot (152mm below
+           base_link origin), +/-25 deg -->
+      <joint name="pitch_joint" type="revolute">
+        <parent>roll_link</parent>
         <child>base_link</child>
         <pose>0 0 -0.152 0 0 0</pose>
+        <axis>
+          <xyz>0 1 0</xyz>
+          <limit>
+            <lower>-0.4363</lower>
+            <upper>0.4363</upper>
+            <effort>1000</effort>
+            <velocity>100</velocity>
+          </limit>
+          <dynamics>
+            <damping>0.01</damping>
+          </dynamics>
+        </axis>
       </joint>
     </model>
 
