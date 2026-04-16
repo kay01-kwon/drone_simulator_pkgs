@@ -74,11 +74,12 @@
       </link>
     </model>
 
-    <!-- Attitude test rig: roll/pitch pivot is 152 mm BELOW base_link,
+    <!-- Attitude test rig: roll/pitch pivot is 20 mm BELOW base_link,
          yaw is fixed. The pivot is raised to 0.5 m above ground and
          visualized as a red sphere atop a thin stand. roll (X-axis)
          and pitch (Y-axis) revolute joints share that pivot and are
-         clamped to +/-25 deg. -->
+         clamped to +/-25 deg. Imports the att_model (measured mass/
+         CoM/inertia variant) rather than model.sdf. -->
     <model name="attitude_test_rig">
       <pose>0 0 0.5 0 0 0</pose>
       <link name="anchor_link">
@@ -133,8 +134,8 @@
         <child>anchor_link</child>
       </joint>
       <include merge="true">
-        <uri>package://drone_description/models/S550</uri>
-        <pose>0 0 0.152 0 0 0</pose>
+        <uri>package://drone_description/models/att_model</uri>
+        <pose>0 0 0.02 0 0 0</pose>
       </include>
       <!-- Roll joint: rotate about X through pivot, +/-25 deg -->
       <joint name="roll_joint" type="revolute">
@@ -153,12 +154,12 @@
           </dynamics>
         </axis>
       </joint>
-      <!-- Pitch joint: rotate about Y through pivot (152mm below
+      <!-- Pitch joint: rotate about Y through pivot (20mm below
            base_link origin), +/-25 deg -->
       <joint name="pitch_joint" type="revolute">
         <parent>roll_link</parent>
         <child>base_link</child>
-        <pose>0 0 -0.152 0 0 0</pose>
+        <pose>0 0 -0.02 0 0 0</pose>
         <axis>
           <xyz>0 1 0</xyz>
           <limit>
