@@ -26,7 +26,7 @@ def generate_launch_description():
     pkg_ros_motor_model = get_package_share_directory('ros_motor_model')
     pkg_ros_gz_sim = get_package_share_directory('ros_gz_sim')
 
-    sdf_file = os.path.join(pkg_prj_description, 'models', 'S550', 'model.sdf')
+    sdf_file = os.path.join(pkg_prj_description, 'models', 'att_model', 'att_model.sdf')
     mavros_config = os.path.join(pkg_prj_bringup, 'config', 'hil_mavros.yaml')
     noise_config = os.path.join(pkg_ros_sensor_noise, 'config', 'noise_hil.yaml')
     ros_second_order_motor_model_config = os.path.join(
