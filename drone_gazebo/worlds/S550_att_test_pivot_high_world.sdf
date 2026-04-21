@@ -1,0 +1,197 @@
+<?xml version="1.0" ?>
+<sdf version="1.8">
+  <world name="S550_world">
+    <physics name="5ms" type="ode">
+      <max_step_size>0.005</max_step_size>
+      <real_time_factor>1.00</real_time_factor>
+      <real_time_update_rate>200</real_time_update_rate>
+    </physics>
+
+    <plugin
+      filename="ignition-gazebo-physics-system"
+      name="gz::sim::systems::Physics">
+    </plugin>
+
+    <plugin
+      filename="ignition-gazebo-scene-broadcaster-system"
+      name="gz::sim::systems::SceneBroadcaster">
+    </plugin>
+
+    <plugin
+      filename="ignition-gazebo-user-commands-system"
+      name="gz::sim::systems::UserCommands">
+    </plugin>
+
+    <plugin
+      filename="ignition-gazebo-sensors-system"
+      name="ignition::gazebo::systems::Sensors">
+      <render_engine>ogre</render_engine>
+    </plugin>
+
+    <plugin
+      filename="ignition-gazebo-imu-system"
+      name="ignition::gazebo::systems::Imu">
+    </plugin>
+
+    <light type="directional" name="sun">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <attenuation>
+        <range>1000</range>
+        <constant>0.9</constant>
+        <linear>0.01</linear>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <direction>-0.5 0.1 -0.9</direction>
+    </light>
+
+    <model name="ground_plane">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>100 100</size>
+            </plane>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>100 100</size>
+            </plane>
+          </geometry>
+          <material>
+            <ambient>0.8 0.8 0.8 1</ambient>
+            <diffuse>0.8 0.8 0.8 1</diffuse>
+            <specular>0.8 0.8 0.8 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Attitude test rig (high pivot): RPY pivot is 150 mm BELOW base_link.
+         Uses the original S550 model.sdf (3.188 kg).
+         Pivot raised to 0.5 m above ground. Roll/pitch +/-25 deg, yaw free.
+         Green sphere to distinguish from the 20 mm rig (red). -->
+    <model name="attitude_test_rig">
+      <pose>0 0 0.5 0 0 0</pose>
+      <link name="anchor_link">
+        <inertial>
+          <mass>0.001</mass>
+          <inertia>
+            <ixx>1e-9</ixx><iyy>1e-9</iyy><izz>1e-9</izz>
+            <ixy>0</ixy><ixz>0</ixz><iyz>0</iyz>
+          </inertia>
+        </inertial>
+        <visual name="stand_visual">
+          <pose>0 0 -0.25 0 0 0</pose>
+          <geometry>
+            <cylinder>
+              <radius>0.015</radius>
+              <length>0.5</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>0.3 0.3 0.3 1</ambient>
+            <diffuse>0.3 0.3 0.3 1</diffuse>
+            <specular>0.2 0.2 0.2 1</specular>
+          </material>
+        </visual>
+        <visual name="pivot_sphere_visual">
+          <pose>0 0 0 0 0 0</pose>
+          <geometry>
+            <sphere>
+              <radius>0.025</radius>
+            </sphere>
+          </geometry>
+          <material>
+            <ambient>0.1 0.8 0.1 1</ambient>
+            <diffuse>0.1 0.9 0.1 1</diffuse>
+            <specular>0.5 0.5 0.5 1</specular>
+          </material>
+        </visual>
+      </link>
+      <link name="roll_link">
+        <inertial>
+          <mass>0.001</mass>
+          <inertia>
+            <ixx>1e-9</ixx><iyy>1e-9</iyy><izz>1e-9</izz>
+            <ixy>0</ixy><ixz>0</ixz><iyz>0</iyz>
+          </inertia>
+        </inertial>
+      </link>
+      <link name="pitch_link">
+        <inertial>
+          <mass>0.001</mass>
+          <inertia>
+            <ixx>1e-9</ixx><iyy>1e-9</iyy><izz>1e-9</izz>
+            <ixy>0</ixy><ixz>0</ixz><iyz>0</iyz>
+          </inertia>
+        </inertial>
+      </link>
+      <joint name="anchor_to_world" type="fixed">
+        <parent>world</parent>
+        <child>anchor_link</child>
+      </joint>
+      <include merge="true">
+        <uri>package://drone_description/models/S550</uri>
+        <pose>0 0 0.15 0 0 0</pose>
+      </include>
+      <joint name="roll_joint" type="revolute">
+        <parent>anchor_link</parent>
+        <child>roll_link</child>
+        <axis>
+          <xyz>1 0 0</xyz>
+          <limit>
+            <lower>-0.4363</lower>
+            <upper>0.4363</upper>
+            <effort>1000</effort>
+            <velocity>100</velocity>
+          </limit>
+          <dynamics>
+            <damping>0.01</damping>
+          </dynamics>
+        </axis>
+      </joint>
+      <joint name="pitch_joint" type="revolute">
+        <parent>roll_link</parent>
+        <child>pitch_link</child>
+        <axis>
+          <xyz>0 1 0</xyz>
+          <limit>
+            <lower>-0.4363</lower>
+            <upper>0.4363</upper>
+            <effort>1000</effort>
+            <velocity>100</velocity>
+          </limit>
+          <dynamics>
+            <damping>0.01</damping>
+          </dynamics>
+        </axis>
+      </joint>
+      <joint name="yaw_joint" type="revolute">
+        <parent>pitch_link</parent>
+        <child>base_link</child>
+        <pose>0 0 -0.15 0 0 0</pose>
+        <axis>
+          <xyz>0 0 1</xyz>
+          <limit>
+            <lower>-1e16</lower>
+            <upper>1e16</upper>
+            <effort>1000</effort>
+            <velocity>100</velocity>
+          </limit>
+          <dynamics>
+            <damping>0.01</damping>
+          </dynamics>
+        </axis>
+      </joint>
+    </model>
+
+    </world>
+</sdf>
