@@ -74,12 +74,10 @@
       </link>
     </model>
 
-    <!-- Attitude test rig: roll/pitch pivot is 20 mm BELOW base_link,
-         yaw is fixed. The pivot is raised to 0.5 m above ground and
-         visualized as a red sphere atop a thin stand. roll (X-axis)
-         and pitch (Y-axis) revolute joints share that pivot and are
-         clamped to +/-25 deg. Imports the att_model (measured mass/
-         CoM/inertia variant) rather than model.sdf. -->
+    <!-- Attitude test rig: roll/pitch/yaw pivot is 20 mm BELOW base_link.
+         The pivot is raised to 0.5 m above ground and visualized as a
+         red sphere atop a thin stand. Roll (X) and pitch (Y) are clamped
+         to +/-25 deg; yaw (Z) is free. Imports att_model. -->
     <model name="attitude_test_rig">
       <pose>0 0 0.5 0 0 0</pose>
       <link name="anchor_link">
@@ -105,7 +103,7 @@
             <specular>0.2 0.2 0.2 1</specular>
           </material>
         </visual>
-        <!-- Ball joint pivot sphere at anchor origin -->
+        <!-- Pivot sphere at anchor origin -->
         <visual name="pivot_sphere_visual">
           <pose>0 0 0 0 0 0</pose>
           <geometry>
@@ -121,6 +119,15 @@
         </visual>
       </link>
       <link name="roll_link">
+        <inertial>
+          <mass>0.001</mass>
+          <inertia>
+            <ixx>1e-9</ixx><iyy>1e-9</iyy><izz>1e-9</izz>
+            <ixy>0</ixy><ixz>0</ixz><iyz>0</iyz>
+          </inertia>
+        </inertial>
+      </link>
+      <link name="pitch_link">
         <inertial>
           <mass>0.001</mass>
           <inertia>
@@ -154,17 +161,34 @@
           </dynamics>
         </axis>
       </joint>
-      <!-- Pitch joint: rotate about Y through pivot (20mm below
-           base_link origin), +/-25 deg -->
+      <!-- Pitch joint: rotate about Y through pivot, +/-25 deg -->
       <joint name="pitch_joint" type="revolute">
         <parent>roll_link</parent>
-        <child>base_link</child>
-        <pose>0 0 -0.02 0 0 0</pose>
+        <child>pitch_link</child>
         <axis>
           <xyz>0 1 0</xyz>
           <limit>
             <lower>-0.4363</lower>
             <upper>0.4363</upper>
+            <effort>1000</effort>
+            <velocity>100</velocity>
+          </limit>
+          <dynamics>
+            <damping>0.01</damping>
+          </dynamics>
+        </axis>
+      </joint>
+      <!-- Yaw joint: rotate about Z through pivot (20mm below
+           base_link origin), no angular limit -->
+      <joint name="yaw_joint" type="revolute">
+        <parent>pitch_link</parent>
+        <child>base_link</child>
+        <pose>0 0 -0.02 0 0 0</pose>
+        <axis>
+          <xyz>0 0 1</xyz>
+          <limit>
+            <lower>-1e16</lower>
+            <upper>1e16</upper>
             <effort>1000</effort>
             <velocity>100</velocity>
           </limit>
