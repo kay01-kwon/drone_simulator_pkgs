@@ -12,4 +12,4 @@
       angular_velocity_stddev: 0.000245
       apply_noise: true
       delay_ms: 0.0  # PX4 EKF2 handles delay internally
-      z_offset: 0.052  # IMU mount height above base_link (m)
+      z_offset: 0.0
