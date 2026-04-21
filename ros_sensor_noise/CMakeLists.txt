@@ -37,6 +37,21 @@ target_link_libraries(ros_odom_noise_generator
   Eigen3::Eigen
 )
 
+add_executable(att_odom_publisher
+  src/att_odom_main.cpp
+  include/ros_sensor_noise/att_odom_publisher.cpp
+)
+
+ament_target_dependencies(att_odom_publisher
+  rclcpp
+  nav_msgs
+  sensor_msgs
+)
+
+target_link_libraries(att_odom_publisher
+  Eigen3::Eigen
+)
+
 add_executable(gz_hil_bridge
   src/hil_bridge_main.cpp
   include/ros_sensor_noise/gz_hil_bridge.cpp
@@ -52,6 +67,7 @@ ament_target_dependencies(gz_hil_bridge
 # Install executable
 install(TARGETS
   ros_odom_noise_generator
+  att_odom_publisher
   gz_hil_bridge
   DESTINATION lib/${PROJECT_NAME}
 )
