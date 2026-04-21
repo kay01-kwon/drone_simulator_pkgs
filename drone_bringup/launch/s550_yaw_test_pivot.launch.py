@@ -122,6 +122,21 @@ def generate_launch_description():
         parameters=[{'use_sim_time': False}]
     )
 
+    # --- Attitude Odom Publisher (FK from joint states) ---
+    att_odom_publisher = Node(
+        package='ros_sensor_noise',
+        executable='att_odom_publisher',
+        output='screen',
+        parameters=[{'use_sim_time': True},
+                    {'model_origin_z': 0.5},
+                    {'pivot_offset_z': 0.02},
+                    {'imu_offset_z': 0.052},
+                    {'odom_frame': 'S550/odom'},
+                    {'child_frame': 'imu_link'},
+                    {'odom_topic': '/S550/ground_truth/odom'},
+                    ]
+    )
+
     # --- Odom Noise Generator ---
     ros_odom_noise = Node(
         package='ros_sensor_noise',
@@ -164,6 +179,7 @@ def generate_launch_description():
         rviz,
         ros_second_order_motor_model,
         gz_hil_bridge,
+        att_odom_publisher,
         ros_odom_noise,
         mavros_node,
     ])
