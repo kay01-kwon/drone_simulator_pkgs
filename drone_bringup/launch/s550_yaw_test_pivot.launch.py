@@ -28,7 +28,7 @@ def generate_launch_description():
 
     sdf_file = os.path.join(pkg_prj_description, 'models', 'att_model', 'att_model.sdf')
     mavros_config = os.path.join(pkg_prj_bringup, 'config', 'hil_mavros.yaml')
-    noise_config = os.path.join(pkg_ros_sensor_noise, 'config', 'noise_hil.yaml')
+    noise_config = os.path.join(pkg_ros_sensor_noise, 'config', 'noise_hil_att.yaml')
     ros_second_order_motor_model_config = os.path.join(
         pkg_ros_motor_model, 'config', 'second_order_motor.yaml')
 
