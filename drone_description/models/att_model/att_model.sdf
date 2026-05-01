@@ -860,7 +860,7 @@
     </plugin>
 
     <!-- Odom publisher -->
-    <plugin
+    <!-- <plugin
       filename="ignition-gazebo-odometry-publisher-system"
       name="ignition::gazebo::systems::OdometryPublisher">
       <odom_frame>S550/odom</odom_frame>
@@ -872,7 +872,7 @@
       <tf_topic>S550/pose</tf_topic>
       <odom_publish_frequency>100.0</odom_publish_frequency>
       <gaussian_noise>0.002</gaussian_noise>
-    </plugin>
+    </plugin> -->
 
     <plugin
       filename="ignition-gazebo-joint-state-publisher-system"
