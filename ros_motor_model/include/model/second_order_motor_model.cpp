@@ -41,8 +41,9 @@ void SecondOrderMotorModel::set_state(const double &rpm_cmd,
         dt
     );
 
-    // Clamp angular velocity and acceleration to their maximum values
-    state_(1) = std::clamp(state_(1), -params_.alpha_max, params_.alpha_max);
+    if (!params_.pure) {
+        state_(1) = std::clamp(state_(1), -params_.alpha_max, params_.alpha_max);
+    }
 
     
     t_prev_ = t_curr_;
@@ -58,13 +59,21 @@ void SecondOrderMotorModel::compute_motor_dynamics(const Vector2d &state,
                                         const double &t_prev)
 {
 
-    double w = state(0); 
+    double w = state(0);
     double w_dot = state(1);
+
+    if (params_.pure) {
+        double wn2 = params_.omega_n * params_.omega_n;
+        double w_ddot = wn2 * (rpm_cmd_ - w) - 2.0 * params_.zeta * params_.omega_n * w_dot;
+        dot_state(0) = w_dot;
+        dot_state(1) = w_ddot;
+        return;
+    }
 
     double w_dot_eff, j_eff;
 
     double j;
-    j = -(params_.p1 + params_.p2 * w)*w_dot 
+    j = -(params_.p1 + params_.p2 * w)*w_dot
         - params_.p3 *(w - rpm_cmd_);
 
     j = std::clamp(j, -params_.jerk_max, params_.jerk_max);
@@ -72,19 +81,16 @@ void SecondOrderMotorModel::compute_motor_dynamics(const Vector2d &state,
 
     if (w_dot > params_.alpha_max && j > 0)
     {
-        // Saturate angular acceleration (Positive direction)
         w_dot_eff = params_.alpha_max;
         j_eff = 0.0;
     }
     else if (w_dot < -params_.alpha_max && j < 0)
     {
-        // Saturate angular acceleration (Negative direction)
         w_dot_eff = -params_.alpha_max;
         j_eff = 0.0;
     }
     else
     {
-        // No saturation needed --> just apply computed values
         w_dot_eff = w_dot;
         j_eff = j;
     }

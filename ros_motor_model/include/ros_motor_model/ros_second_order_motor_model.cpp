@@ -24,12 +24,18 @@ RosSecondOrderMotorModelNode::RosSecondOrderMotorModelNode() : Node("ros_second_
     this->declare_parameter<double>("motor.p2", motor_params.p2);
     this->declare_parameter<double>("motor.p3", motor_params.p3);
     this->declare_parameter<double>("motor.jerk_max", motor_params.jerk_max);
+    this->declare_parameter<bool>("motor.pure", motor_params.pure);
+    this->declare_parameter<double>("motor.zeta", motor_params.zeta);
+    this->declare_parameter<double>("motor.omega_n", motor_params.omega_n);
 
     motor_params.alpha_max = this->get_parameter("motor.alpha_max").as_double();
     motor_params.p1 = this->get_parameter("motor.p1").as_double();
     motor_params.p2 = this->get_parameter("motor.p2").as_double();
     motor_params.p3 = this->get_parameter("motor.p3").as_double();
     motor_params.jerk_max = this->get_parameter("motor.jerk_max").as_double();
+    motor_params.pure = this->get_parameter("motor.pure").as_bool();
+    motor_params.zeta = this->get_parameter("motor.zeta").as_double();
+    motor_params.omega_n = this->get_parameter("motor.omega_n").as_double();
 
     // Declare and get noise parameters
     this->declare_parameter<bool>("motor.noise.enabled", false);
@@ -91,13 +97,20 @@ RosSecondOrderMotorModelNode::RosSecondOrderMotorModelNode() : Node("ros_second_
         throw std::runtime_error("Unsupported UAV type");
     }
 
-    RCLCPP_INFO(this->get_logger(),
-                "Motor Parameters: alpha_max=%.2f, p1=%.6f, p2=%.10f, p3=%.6f, jerk_max=%.2f",
-                motor_params.alpha_max,
-                motor_params.p1,
-                motor_params.p2,
-                motor_params.p3,
-                motor_params.jerk_max);
+    if (motor_params.pure) {
+        RCLCPP_INFO(this->get_logger(),
+                    "Pure 2nd Order Mode: zeta=%.4f, omega_n=%.4f rad/s",
+                    motor_params.zeta,
+                    motor_params.omega_n);
+    } else {
+        RCLCPP_INFO(this->get_logger(),
+                    "Motor Parameters: alpha_max=%.2f, p1=%.6f, p2=%.10f, p3=%.6f, jerk_max=%.2f",
+                    motor_params.alpha_max,
+                    motor_params.p1,
+                    motor_params.p2,
+                    motor_params.p3,
+                    motor_params.jerk_max);
+    }
 
     pub_actual_rps_ = this->create_publisher<Actuators>(
         actual_rps_topic_name, 5);

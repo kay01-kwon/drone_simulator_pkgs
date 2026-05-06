@@ -12,6 +12,9 @@ struct SecondOrderMotorParams
     double p3{515.605};   // Motor Stiffness
     double jerk_max{250000.0};      // Maximum angular jerk [RPM/s^2]
     double alpha_max{15000.0};      // Maximum angular acceleration [RPM/s]
+    bool pure{false};
+    double zeta{0.925};
+    double omega_n{3.57};
 };
 
 
