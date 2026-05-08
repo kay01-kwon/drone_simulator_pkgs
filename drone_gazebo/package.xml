@@ -11,6 +11,9 @@
 
   <depend>drone_description</depend>
 
+  <build_depend>gz-sim6</build_depend>
+  <build_depend>gz-plugin2</build_depend>
+
   <export>
     <build_type>ament_cmake</build_type>
   </export>
