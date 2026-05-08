@@ -10,6 +10,7 @@ Output: [ax, ay, az] residual (actual - predicted)
 Uses GPyTorch Variational SGPR with inducing points.
 """
 
+import struct
 import sqlite3
 import numpy as np
 import torch
@@ -28,6 +29,7 @@ from rosbags.typesys import Stores, get_typestore
 
 MASS = 3.188  # kg
 G = 9.81      # m/s^2
+CT = 1.255e-7 # N/(rpm)^2
 IXX = 0.06573874618
 IYY = 0.06535731789
 IZZ = 0.10317211827
@@ -99,7 +101,34 @@ def extract_all_data(bag_dir: str):
     for key in imu_data:
         imu_data[key] = np.array(imu_data[key])
 
-    return odom_data, ctrl_data, imu_data
+    # Parse actual RPM from sqlite
+    db_files = list(bag_path.glob("*.db3"))
+    conn = sqlite3.connect(str(db_files[0]))
+    topics = conn.execute("SELECT id, name FROM topics").fetchall()
+    topic_map = {t[1]: t[0] for t in topics}
+    rows = conn.execute(
+        "SELECT timestamp, data FROM messages WHERE topic_id=? ORDER BY timestamp",
+        (topic_map["/uav/actual_rpm"],),
+    ).fetchall()
+
+    rpm_data = {"ts": [], "vals": []}
+    for _, data_bytes in rows:
+        offset = 4
+        sec, nsec = struct.unpack_from("<II", data_bytes, offset)
+        offset += 8
+        frame_len = struct.unpack_from("<I", data_bytes, offset)[0]
+        offset += 4 + frame_len
+        while offset % 4:
+            offset += 1
+        vals = struct.unpack_from("<6i", data_bytes, offset)
+        rpm_data["ts"].append(sec + nsec * 1e-9)
+        rpm_data["vals"].append(list(vals))
+    conn.close()
+
+    rpm_data["ts"] = np.array(rpm_data["ts"])
+    rpm_data["vals"] = np.array(rpm_data["vals"], dtype=np.float64)
+
+    return odom_data, ctrl_data, imu_data, rpm_data
 
 
 def compute_euler_from_quat(qx, qy, qz, qw):
@@ -243,15 +272,21 @@ def main():
 
     # --- Extract data ---
     print("\n[1] Extracting data from rosbag...")
-    odom, ctrl, imu = extract_all_data(bag_dir)
+    odom, ctrl, imu, rpm = extract_all_data(bag_dir)
     print(f"    odom:    {len(odom['ts'])} samples")
     print(f"    control: {len(ctrl['ts'])} samples")
     print(f"    imu:     {len(imu['ts'])} samples")
+    print(f"    rpm:     {len(rpm['ts'])} samples")
+
+    # --- Fz from actual RPM ---
+    fz_rpm = CT * np.sum(rpm["vals"] ** 2, axis=1)
+    print(f"    Fz from RPM: mean={fz_rpm.mean():.2f} N, mg={MASS*G:.2f} N")
 
     # --- Common time reference ---
-    t0 = min(odom["ts"][0], ctrl["ts"][0], imu["ts"][0])
+    t0 = min(odom["ts"][0], ctrl["ts"][0], imu["ts"][0], rpm["ts"][0])
     odom_t = odom["ts"] - t0
     ctrl_t = ctrl["ts"] - t0
+    rpm_t = rpm["ts"] - t0
 
     # --- Euler angles from odom quaternion ---
     roll, pitch, yaw = compute_euler_from_quat(
@@ -288,9 +323,9 @@ def main():
         odom_t, vx_world, vy_world, vz_world
     )
 
-    # --- Interpolate control to odom timestamps ---
-    print("\n[4] Interpolating control inputs to odom timestamps...")
-    fz_interp = interp1d(ctrl_t, ctrl["fz"], kind="previous",
+    # --- Interpolate to odom timestamps ---
+    print("\n[4] Interpolating inputs to odom timestamps...")
+    fz_interp = interp1d(rpm_t, fz_rpm, kind="linear",
                          fill_value="extrapolate", bounds_error=False)(odom_t)
     tx_interp = interp1d(ctrl_t, ctrl["tx"], kind="previous",
                          fill_value="extrapolate", bounds_error=False)(odom_t)
@@ -299,8 +334,8 @@ def main():
     tz_interp = interp1d(ctrl_t, ctrl["tz"], kind="previous",
                          fill_value="extrapolate", bounds_error=False)(odom_t)
 
-    # --- Rigid body prediction ---
-    print("\n[5] Computing rigid-body predicted accelerations...")
+    # --- Rigid body prediction (Fz from actual RPM) ---
+    print("\n[5] Computing rigid-body predicted accelerations (Fz from actual RPM)...")
     ax_pred, ay_pred, az_pred = predict_rigid_body_accel(fz_interp, roll, pitch)
 
     # --- Compute residuals (hovering only) ---
