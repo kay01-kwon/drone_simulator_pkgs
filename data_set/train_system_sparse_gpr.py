@@ -504,6 +504,61 @@ def main():
     plt.savefig(str(save_dir / "system_sparse_gpr_scatter.png"), dpi=150)
     print(f"    Scatter plots saved to: {save_dir / 'system_sparse_gpr_scatter.png'}")
 
+    # Velocity comparison: one-step integration of predicted acceleration
+    # v_pred(t+dt) = v_actual(t) + a_pred(t) * dt
+    hover_valid_idx = hover_idx[valid]
+    v_world_actual = [vx_world[hover_valid_idx],
+                      vy_world[hover_valid_idx],
+                      vz_world[hover_valid_idx]]
+    vel_labels = ["vx (m/s)", "vy (m/s)", "vz (m/s)"]
+
+    fig4, axes4 = plt.subplots(3, 2, figsize=(16, 12))
+
+    for i, (ax_name, vlabel) in enumerate(zip(axis_names, vel_labels)):
+        model, lik, xm, xs, ym, ys = models[ax_name]
+        gp_correction, _ = predict_sgpr(model, lik, test_x, xm, xs, ym, ys)
+
+        n_pts = len(hover_t)
+        dt = np.diff(hover_t)
+
+        # One-step: v_pred(t+1) = v_actual(t) + a(t)*dt
+        v_rb = np.zeros(n_pts)
+        v_gp = np.zeros(n_pts)
+        v_rb[0] = v_world_actual[i][0]
+        v_gp[0] = v_world_actual[i][0]
+        for j in range(n_pts - 1):
+            v_rb[j + 1] = v_world_actual[i][j] + accel_pred_rb[i][j] * dt[j]
+            v_gp[j + 1] = v_world_actual[i][j] + (accel_pred_rb[i][j] + gp_correction[j]) * dt[j]
+
+        err_rb = v_world_actual[i] - v_rb
+        err_gp = v_world_actual[i] - v_gp
+
+        # Left: time series
+        ax = axes4[i, 0]
+        ax.plot(hover_t, v_world_actual[i], "k-", linewidth=0.8, alpha=0.6, label="Actual (odom→world)")
+        ax.plot(hover_t, v_rb, "b-", linewidth=0.8, alpha=0.5, label="RB one-step")
+        ax.plot(hover_t, v_gp, "r-", linewidth=0.8, alpha=0.5, label="RB+GP one-step")
+        ax.set_ylabel(vlabel)
+        ax.set_xlabel("Time (s)")
+        ax.legend(fontsize=7)
+        ax.set_title(f"{vlabel} — One-Step Velocity Prediction")
+
+        # Right: error distribution
+        ax2 = axes4[i, 1]
+        ax2.hist(err_rb, bins=80, alpha=0.5, density=True,
+                 label=f"RB (std={err_rb.std():.4f})")
+        ax2.hist(err_gp, bins=80, alpha=0.5, density=True,
+                 label=f"RB+GP (std={err_gp.std():.4f})")
+        ax2.set_xlabel(f"Velocity error (m/s)")
+        ax2.set_ylabel("Density")
+        ax2.legend(fontsize=7)
+        ax2.set_title(f"{vlabel} — Prediction Error")
+
+    plt.suptitle("One-Step Velocity Prediction: v(t+dt) = v(t) + a_pred·dt", fontsize=14)
+    plt.tight_layout()
+    plt.savefig(str(save_dir / "system_sparse_gpr_velocity.png"), dpi=150)
+    print(f"    Velocity plots saved to: {save_dir / 'system_sparse_gpr_velocity.png'}")
+
     print("\n" + "=" * 60)
     print("Done!")
     print("=" * 60)
