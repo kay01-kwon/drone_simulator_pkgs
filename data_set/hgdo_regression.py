@@ -4,10 +4,7 @@ HGDO Disturbance Regression Analysis
 Estimates CG offset (p_off) and viscous damping (b) from
 HGDO wrench data during hovering flight.
 
-Model: tau_dist = -p_off x F_col + b * omega
-
-The HGDO observer publishes the *compensation* signal, so we negate
-the wrench to recover the estimated disturbance.
+Model: tau_hgdo = -p_off x F_col + b * omega
 
 Uses Ct = 1.255e-7 N/(rpm)^2 to compute F_col from actual RPM.
 Angular velocity from IMU (/mavros/imu/data) for better SNR.
@@ -119,7 +116,7 @@ def main():
     bag_dir = "data_set/2026_05_05_free_flight/02_ct_1p255"
 
     print("=" * 60)
-    print("HGDO Disturbance Regression (IMU ω, -τ convention)")
+    print("HGDO Disturbance Regression (IMU ω)")
     print("=" * 60)
 
     hgdo, imu, pose, rpm = extract_data(bag_dir)
@@ -153,10 +150,9 @@ def main():
     fz = interp1d(rpm_t, fz_rpm, kind="linear",
                   fill_value="extrapolate", bounds_error=False)(t_h)
 
-    # Negate: HGDO publishes compensation signal, not disturbance
-    tx = -hgdo["tx"][h]
-    ty = -hgdo["ty"][h]
-    tz = -hgdo["tz"][h]
+    tx = hgdo["tx"][h]
+    ty = hgdo["ty"][h]
+    tz = hgdo["tz"][h]
 
     # --- Regression ---
     # Roll:  tau_x = (-y_off) * Fz + b_x * wx
@@ -191,7 +187,7 @@ def main():
     r2_z = r2_score(tz, tz_pred)
 
     print(f"\n{'='*60}")
-    print(f"Results (Ct = {CT}, -tau convention)")
+    print(f"Results (Ct = {CT})")
     print(f"{'='*60}")
     print(f"  Roll:  y_off = {y_off*1000:.3f} mm,  b_x = {b_x:.4f} Nm·s/rad,  R² = {r2_x:.4f}")
     print(f"  Pitch: x_off = {x_off*1000:.3f} mm,  b_y = {b_y:.4f} Nm·s/rad,  R² = {r2_y:.4f}")
@@ -245,8 +241,8 @@ def main():
         ax.set_title(f"{name} (std={res.std():.4f})")
 
     plt.suptitle(
-        r"HGDO Regression ($-\tau$ convention, IMU $\omega$): "
-        r"$\tau_{dist} = -\mathbf{p}_{off} \times \mathbf{F}_{col}"
+        r"HGDO Regression (IMU $\omega$): "
+        r"$\tau_{hgdo} = -\mathbf{p}_{off} \times \mathbf{F}_{col}"
         r" + \mathbf{b} \cdot \omega$"
         f"\nx_off={x_off*1000:.2f}mm, y_off={y_off*1000:.2f}mm, "
         f"b_x={b_x:.4f}, b_y={b_y:.4f}, b_z={b_z:.4f} Nm·s/rad",
