@@ -30,7 +30,7 @@ public:
     if (_sdf->HasElement("b_z"))
       this->bz_ = _sdf->Get<double>("b_z");
 
-    gzmsg << "[AngularDamping] link=" << linkName_
+    ignmsg << "[AngularDamping] link=" << linkName_
           << "  b=[" << bx_ << ", " << by_ << ", " << bz_
           << "] Nm·s/rad" << std::endl;
   }
@@ -83,10 +83,10 @@ private:
 
 }  // namespace angular_damping
 
-GZ_ADD_PLUGIN(angular_damping::AngularDamping,
+IGNITION_ADD_PLUGIN(angular_damping::AngularDamping,
               gz::sim::System,
               angular_damping::AngularDamping::ISystemConfigure,
               angular_damping::AngularDamping::ISystemPreUpdate)
 
-GZ_ADD_PLUGIN_ALIAS(angular_damping::AngularDamping,
+IGNITION_ADD_PLUGIN_ALIAS(angular_damping::AngularDamping,
                     "angular_damping::AngularDamping")
