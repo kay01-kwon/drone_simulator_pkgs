@@ -4,7 +4,7 @@ System Dynamics Residual Learning with Sparse GPR
 Learns the residual between rigid-body dynamics prediction and actual
 acceleration from odom, during hovering flight.
 
-Input: [Fz, tau_x, tau_y, tau_z, roll, pitch, vx, vy, vz]
+Input: [Fz, roll, pitch, vx, vy, vz]
 Output: [ax, ay, az] residual (actual - predicted)
 
 Uses GPyTorch Variational SGPR with inducing points.
@@ -163,18 +163,22 @@ def compute_accel_from_velocity(ts, vx, vy, vz):
     return ax, ay, az
 
 
-def predict_rigid_body_accel(fz, roll, pitch):
+def predict_rigid_body_accel(fz, rotations):
     """
     Predict world-frame linear acceleration from thrust and orientation.
-    Thrust is along body z-axis, rotated to world frame.
+    Uses rotation matrix directly to avoid Euler sign convention issues.
 
-    a_x = -(Fz/m) * sin(pitch)
-    a_y =  (Fz/m) * sin(roll) * cos(pitch)
-    a_z =  (Fz/m) * cos(roll) * cos(pitch) - g
+    a_world = R * [0, 0, Fz/m]^T + [0, 0, -g]^T
     """
-    ax_pred = -(fz / MASS) * np.sin(pitch)
-    ay_pred = (fz / MASS) * np.sin(roll) * np.cos(pitch)
-    az_pred = (fz / MASS) * np.cos(roll) * np.cos(pitch) - G
+    N = len(fz)
+    ax_pred = np.zeros(N)
+    ay_pred = np.zeros(N)
+    az_pred = np.zeros(N)
+    for i in range(N):
+        thrust_world = rotations[i].apply([0, 0, fz[i] / MASS])
+        ax_pred[i] = thrust_world[0]
+        ay_pred[i] = thrust_world[1]
+        az_pred[i] = thrust_world[2] - G
     return ax_pred, ay_pred, az_pred
 
 
@@ -323,20 +327,14 @@ def main():
         odom_t, vx_world, vy_world, vz_world
     )
 
-    # --- Interpolate to odom timestamps ---
-    print("\n[4] Interpolating inputs to odom timestamps...")
+    # --- Interpolate Fz from actual RPM ---
+    print("\n[4] Interpolating Fz from actual RPM to odom timestamps...")
     fz_interp = interp1d(rpm_t, fz_rpm, kind="linear",
                          fill_value="extrapolate", bounds_error=False)(odom_t)
-    tx_interp = interp1d(ctrl_t, ctrl["tx"], kind="previous",
-                         fill_value="extrapolate", bounds_error=False)(odom_t)
-    ty_interp = interp1d(ctrl_t, ctrl["ty"], kind="previous",
-                         fill_value="extrapolate", bounds_error=False)(odom_t)
-    tz_interp = interp1d(ctrl_t, ctrl["tz"], kind="previous",
-                         fill_value="extrapolate", bounds_error=False)(odom_t)
 
-    # --- Rigid body prediction (Fz from actual RPM) ---
-    print("\n[5] Computing rigid-body predicted accelerations (Fz from actual RPM)...")
-    ax_pred, ay_pred, az_pred = predict_rigid_body_accel(fz_interp, roll, pitch)
+    # --- Rigid body prediction (rotation matrix, Fz from actual RPM) ---
+    print("\n[5] Computing rigid-body predicted accelerations (R*[0,0,Fz/m])...")
+    ax_pred, ay_pred, az_pred = predict_rigid_body_accel(fz_interp, rots)
 
     # --- Compute residuals (hovering only) ---
     res_ax = ax_actual[hover_idx] - ax_pred[hover_idx]
@@ -349,12 +347,9 @@ def main():
     print(f"    az: mean={res_az.mean():.4f}, std={res_az.std():.4f} m/s^2")
 
     # --- Prepare features ---
-    # [Fz, tx, ty, tz, roll, pitch, vx_world, vy_world, vz_world]
+    # [Fz, roll, pitch, vx_world, vy_world, vz_world]
     features = np.stack([
         fz_interp[hover_idx],
-        tx_interp[hover_idx],
-        ty_interp[hover_idx],
-        tz_interp[hover_idx],
         roll[hover_idx],
         pitch[hover_idx],
         vx_world[hover_idx],
