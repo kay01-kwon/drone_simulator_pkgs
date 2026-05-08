@@ -99,7 +99,7 @@ def extract_bag_data(bag_dir: str):
 
 
 # ============================================================
-# 2. Pure 2nd-order motor model simulation
+# 2. Motor model simulation (Pure & Impure 2nd-order)
 # ============================================================
 
 class PureSecondOrderModel:
@@ -138,6 +138,54 @@ class PureSecondOrderModel:
 
             rpm[i] = np.clip(rpm[i], -15000, 15000)
             rpm_dot[i] = np.clip(rpm_dot[i], -500000, 500000)
+
+        return rpm
+
+
+class ImpureSecondOrderModel:
+    """Impure 2nd-order: j = -(p1 + p2*w)*w_dot - p3*(w - cmd)
+    with jerk and acceleration constraints."""
+
+    def __init__(self, p1=25.16687, p2=0.003933, p3=515.605,
+                 jerk_max=250000.0, alpha_max=15000.0):
+        self.p1 = p1
+        self.p2 = p2
+        self.p3 = p3
+        self.jerk_max = jerk_max
+        self.alpha_max = alpha_max
+
+    def simulate(self, timestamps, cmd_rpm_per_motor, rpm_init=0.0):
+        N = len(timestamps)
+        rpm = np.zeros(N)
+        rpm[0] = rpm_init
+        rpm_dot = np.zeros(N)
+
+        p1, p2, p3 = self.p1, self.p2, self.p3
+        j_max = self.jerk_max
+        a_max = self.alpha_max
+
+        for i in range(1, N):
+            dt = timestamps[i] - timestamps[i - 1]
+            if dt <= 0 or dt > 0.1:
+                continue
+
+            def dynamics(w, w_dot, cmd):
+                j = -(p1 + p2 * w) * w_dot - p3 * (w - cmd)
+                j = np.clip(j, -j_max, j_max)
+                if w_dot > a_max and j > 0:
+                    return a_max, 0.0
+                elif w_dot < -a_max and j < 0:
+                    return -a_max, 0.0
+                return w_dot, j
+
+            k1_w, k1_wd = dynamics(rpm[i-1], rpm_dot[i-1], cmd_rpm_per_motor[i-1])
+            k2_w, k2_wd = dynamics(rpm[i-1] + 0.5*dt*k1_w, rpm_dot[i-1] + 0.5*dt*k1_wd, cmd_rpm_per_motor[i-1])
+            k3_w, k3_wd = dynamics(rpm[i-1] + 0.5*dt*k2_w, rpm_dot[i-1] + 0.5*dt*k2_wd, cmd_rpm_per_motor[i-1])
+            k4_w, k4_wd = dynamics(rpm[i-1] + dt*k3_w, rpm_dot[i-1] + dt*k3_wd, cmd_rpm_per_motor[i-1])
+
+            rpm[i] = rpm[i-1] + dt/6.0 * (k1_w + 2*k2_w + 2*k3_w + k4_w)
+            rpm_dot[i] = rpm_dot[i-1] + dt/6.0 * (k1_wd + 2*k2_wd + 2*k3_wd + k4_wd)
+            rpm_dot[i] = np.clip(rpm_dot[i], -a_max, a_max)
 
         return rpm
 
@@ -201,25 +249,39 @@ def main():
         cmd_rpm_interp[:, motor_i] = f(rpm_ts_rel)
 
     # --- Simulate pure 2nd-order model ---
-    print("\n[3] Simulating pure 2nd-order motor model (zeta=0.925, omega_n=22.42)...")
-    model_sim = PureSecondOrderModel(zeta=0.925, omega_n=22.42)
+    print("\n[3a] Simulating pure 2nd-order motor model (zeta=0.925, omega_n=22.42)...")
+    pure_sim = PureSecondOrderModel(zeta=0.925, omega_n=22.42)
 
-    model_rpm = np.zeros_like(actual_rpm)
+    pure_rpm = np.zeros_like(actual_rpm)
     for motor_i in range(6):
-        sim_result = model_sim.simulate(
+        pure_rpm[:, motor_i] = pure_sim.simulate(
             rpm_ts_rel, cmd_rpm_interp[:, motor_i],
             rpm_init=actual_rpm[0, motor_i])
-        model_rpm[:, motor_i] = sim_result
 
-    # --- Compute residual ---
-    residual = actual_rpm - model_rpm
+    pure_residual = actual_rpm - pure_rpm
+    print(f"    Pure residual: mean={pure_residual.mean():.2f}, std={pure_residual.std():.2f}")
 
-    print(f"    Residual stats (all motors):")
-    print(f"    mean={residual.mean():.2f}, std={residual.std():.2f}, "
-          f"min={residual.min():.2f}, max={residual.max():.2f}")
+    # --- Simulate impure 2nd-order model ---
+    print("\n[3b] Simulating impure 2nd-order motor model (p1=25.17, p2=0.00393, p3=515.6)...")
+    impure_sim = ImpureSecondOrderModel(
+        p1=25.16687, p2=0.003933, p3=515.605,
+        jerk_max=250000.0, alpha_max=15000.0)
+
+    impure_rpm = np.zeros_like(actual_rpm)
+    for motor_i in range(6):
+        impure_rpm[:, motor_i] = impure_sim.simulate(
+            rpm_ts_rel, cmd_rpm_interp[:, motor_i],
+            rpm_init=actual_rpm[0, motor_i])
+
+    impure_residual = actual_rpm - impure_rpm
+    print(f"    Impure residual: mean={impure_residual.mean():.2f}, std={impure_residual.std():.2f}")
+
+    # Use impure model for GPR residual learning
+    model_rpm = impure_rpm
+    residual = impure_residual
 
     # --- Prepare training data (pool all 6 motors) ---
-    print("\n[4] Preparing training data...")
+    print("\n[4] Preparing training data (impure model residual)...")
 
     train_features = []
     train_targets = []
@@ -331,8 +393,12 @@ def main():
         "y_mean": y_mean,
         "y_std": y_std,
         "n_inducing": n_inducing,
-        "zeta": 0.925,
-        "omega_n": 22.42,
+        "base_model": "impure",
+        "p1": 25.16687,
+        "p2": 0.003933,
+        "p3": 515.605,
+        "jerk_max": 250000.0,
+        "alpha_max": 15000.0,
     }, save_path)
     print(f"\n    Model saved to: {save_path}")
 
@@ -344,10 +410,11 @@ def main():
         ax = axes[motor_i // 2, motor_i % 2]
 
         actual_m = actual_rpm[:, motor_i]
-        model_m = model_rpm[:, motor_i]
+        pure_m = pure_rpm[:, motor_i]
+        impure_m = impure_rpm[:, motor_i]
 
-        # GP correction for this motor
-        feat = np.stack([cmd_rpm_interp[:, motor_i], model_m], axis=1)
+        # GP correction for this motor (on impure model)
+        feat = np.stack([cmd_rpm_interp[:, motor_i], impure_m], axis=1)
         feat_t = torch.tensor(feat, dtype=torch.float32)
         feat_norm = (feat_t - x_mean) / x_std
 
@@ -356,17 +423,18 @@ def main():
             correction_norm = gp_pred.mean
         correction = (correction_norm * y_std + y_mean).numpy()
 
-        corrected = model_m + correction
+        corrected = impure_m + correction
 
         ax.plot(rpm_ts_rel, actual_m, "k.", markersize=1, alpha=0.3, label="Actual")
-        ax.plot(rpm_ts_rel, model_m, "b-", alpha=0.5, linewidth=0.8, label="Model")
-        ax.plot(rpm_ts_rel, corrected, "r-", alpha=0.5, linewidth=0.8, label="Model+GP")
+        ax.plot(rpm_ts_rel, pure_m, "c-", alpha=0.4, linewidth=0.8, label="Pure")
+        ax.plot(rpm_ts_rel, impure_m, "b-", alpha=0.5, linewidth=0.8, label="Impure")
+        ax.plot(rpm_ts_rel, corrected, "r-", alpha=0.5, linewidth=0.8, label="Impure+GP")
         ax.set_title(f"Motor {motor_i+1}")
         ax.set_xlabel("Time (s)")
         ax.set_ylabel("RPM")
         ax.legend(fontsize=7)
 
-    plt.suptitle("Motor Model Residual Learning (Sparse GPR)", fontsize=14)
+    plt.suptitle("Motor Model: Pure vs Impure vs Impure+GP", fontsize=14)
     plt.tight_layout()
     plt.savefig(str(save_dir / "motor_sparse_gpr_results.png"), dpi=150)
     print(f"    Plot saved to: {save_dir / 'motor_sparse_gpr_results.png'}")
@@ -381,13 +449,14 @@ def main():
     plt.savefig(str(save_dir / "motor_sparse_gpr_loss.png"), dpi=150)
     print(f"    Loss plot saved to: {save_dir / 'motor_sparse_gpr_loss.png'}")
 
-    # Residual histogram
+    # Residual histogram: pure vs impure vs impure+GP
     fig3, ax3 = plt.subplots(1, 1, figsize=(8, 4))
-    ax3.hist(train_targets, bins=100, alpha=0.5, label="Before GP", density=True)
-    ax3.hist(train_residual_error, bins=100, alpha=0.5, label="After GP", density=True)
+    ax3.hist(pure_residual.flatten(), bins=100, alpha=0.4, label=f"Pure (std={pure_residual.std():.1f})", density=True)
+    ax3.hist(impure_residual.flatten(), bins=100, alpha=0.4, label=f"Impure (std={impure_residual.std():.1f})", density=True)
+    ax3.hist(train_residual_error, bins=100, alpha=0.4, label=f"Impure+GP (std={train_residual_error.std():.1f})", density=True)
     ax3.set_xlabel("Residual (RPM)")
     ax3.set_ylabel("Density")
-    ax3.set_title("Residual Distribution")
+    ax3.set_title("Residual Distribution: Pure vs Impure vs Impure+GP")
     ax3.legend()
     plt.tight_layout()
     plt.savefig(str(save_dir / "motor_residual_histogram.png"), dpi=150)
