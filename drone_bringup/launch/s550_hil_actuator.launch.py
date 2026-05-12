@@ -120,7 +120,8 @@ def generate_launch_description():
     )
 
     # --- Odom Noise Generator ---
-    # Gazebo ground_truth → add noise → /mavros/vision_pose/pose → PX4 EKF2
+    # Gazebo ground_truth + measured noise → /mavros/local_position/odom
+    # (mavros local_position plugin blacklisted to avoid topic conflict)
     ros_odom_noise = Node(
         package='ros_sensor_noise',
         executable='ros_odom_noise_generator',
@@ -131,6 +132,7 @@ def generate_launch_description():
     )
 
     # --- MAVROS (USB connection to real PX4 board) ---
+    # NOTE: local_position plugin blacklisted in hil_mavros.yaml
     mavros_node = Node(
         package='mavros',
         executable='mavros_node',
