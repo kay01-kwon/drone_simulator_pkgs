@@ -25,7 +25,6 @@
       - sys_status
       - sys_time
       - imu
-      - local_position
       - vision_pose
       - vision_speed
       - odometry

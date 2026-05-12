@@ -2,14 +2,18 @@
   ros__parameters:
     topics:
       odom_input: "/S550/ground_truth/odom"
-      odom_output: "/mavros/local_position/odom_sim"
+      odom_output: "/mavros/local_position/odom"
       pose_output: "/mavros/vision_pose/pose"
     noise:
       position_stddev: 0.00051
       angle_stddev: 0.00017
       axis_stddev: 0.005
-      linear_velocity_stddev: 0.000106
-      angular_velocity_stddev: 0.000245
+      linear_velocity_stddev_x: 0.010
+      linear_velocity_stddev_y: 0.007
+      linear_velocity_stddev_z: 0.022
+      angular_velocity_stddev_x: 0.124
+      angular_velocity_stddev_y: 0.168
+      angular_velocity_stddev_z: 0.123
       apply_noise: true
       delay_ms: 0.0
       z_offset: 0.0  # att_model OdometryPublisher already uses imu_link
