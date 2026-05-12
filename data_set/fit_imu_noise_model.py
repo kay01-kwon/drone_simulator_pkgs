@@ -196,8 +196,8 @@ def main():
     od_ts -= t0
     rpm_ts -= t0
 
-    t_start = 5.0
-    t_end = min(imu_ts[-1], od_ts[-1], rpm_ts[-1]) - 5.0
+    t_start = 1.0
+    t_end = min(imu_ts[-1], od_ts[-1], rpm_ts[-1]) - 1.0
 
     # ---- Interpolate odom velocity & RPM to IMU time grid ----
     mask = (imu_ts >= t_start) & (imu_ts <= t_end)
