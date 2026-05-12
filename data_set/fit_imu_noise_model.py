@@ -166,17 +166,25 @@ def main():
     imu_acc = np.array(imu_acc)
     print(f"  IMU: {len(imu_ts)} samples")
 
-    od_ts, od_vel = [], []
+    od_ts, od_vel_body, od_q_odom = [], [], []
     for _, data in read_bag_topic(bag_path, "/mavros/local_position/odom"):
         try:
             t, qx, qy, qz, qw, vx, vy, vz, wx, wy, wz = parse_odom(data)
             od_ts.append(t)
-            od_vel.append([vx, vy, vz])
+            od_vel_body.append([vx, vy, vz])
+            od_q_odom.append([qx, qy, qz, qw])
         except:
             continue
     od_ts = np.array(od_ts)
-    od_vel = np.array(od_vel)
-    print(f"  Odom: {len(od_ts)} samples")
+    od_vel_body = np.array(od_vel_body)
+    od_q_odom = np.array(od_q_odom)
+
+    # Convert odom velocity from body frame to world frame
+    od_vel = np.zeros_like(od_vel_body)
+    for i in range(len(od_ts)):
+        R = Rotation.from_quat(od_q_odom[i]).as_matrix()
+        od_vel[i] = R @ od_vel_body[i]
+    print(f"  Odom: {len(od_ts)} samples (vel converted body→world)")
 
     rpm_ts, rpm_vals = [], []
     for _, data in read_bag_topic(bag_path, "/uav/actual_rpm"):

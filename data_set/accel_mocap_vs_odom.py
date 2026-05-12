@@ -134,9 +134,15 @@ def main():
             continue
     od_ts = np.array(od_ts)
     od_pos = np.array(od_pos)
-    od_vel = np.array(od_vel)
+    od_vel_body = np.array(od_vel)
     od_q = np.array(od_q)
-    print(f"  Odom: {len(od_ts)} samples, dt_med={np.median(np.diff(od_ts))*1000:.1f} ms")
+
+    # Convert odom velocity from body frame to world frame
+    od_vel = np.zeros_like(od_vel_body)
+    for i in range(len(od_ts)):
+        R = Rotation.from_quat(od_q[i]).as_matrix()
+        od_vel[i] = R @ od_vel_body[i]
+    print(f"  Odom: {len(od_ts)} samples, dt_med={np.median(np.diff(od_ts))*1000:.1f} ms (vel body→world)")
 
     # --- Parse IMU ---
     print("[3] Parsing IMU (/mavros/imu/data)...")
