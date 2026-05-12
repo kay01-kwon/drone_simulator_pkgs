@@ -9,8 +9,7 @@
       <pose>0 0 0 0 0 0</pose>
       <inertial>
         <!-- Center of mass -->
-        <pose>-0.0105 0.005 0.00 
-          0 0 0</pose>
+        <pose>-0.006 0.0 0.0 0 0 0</pose>
         <mass>3.188</mass>
         <inertia>
           <ixx>0.06573874618</ixx>
@@ -75,13 +74,13 @@
       </inertial>
       <sensor name="imu_sensor" type="imu">
         <always_on>true</always_on>
-        <update_rate>250</update_rate>
+        <update_rate>200</update_rate>
         <imu>
           <angular_velocity>
             <x>
               <noise type="gaussian">
                 <mean>0.0</mean>
-                <stddev>7.727e-4</stddev>
+                <stddev>0.115</stddev>
                 <bias_mean>0.0</bias_mean>
                 <bias_stddev>0.0</bias_stddev>
                 <dynamic_bias_stddev>1.5e-4</dynamic_bias_stddev>
@@ -91,7 +90,7 @@
             <y>
               <noise type="gaussian">
                 <mean>0.0</mean>
-                <stddev>7.727e-4</stddev>
+                <stddev>0.151</stddev>
                 <bias_mean>0.0</bias_mean>
                 <bias_stddev>0.0</bias_stddev>
                 <dynamic_bias_stddev>1.5e-4</dynamic_bias_stddev>
@@ -101,7 +100,7 @@
             <z>
               <noise type="gaussian">
                 <mean>0.0</mean>
-                <stddev>7.727e-4</stddev>
+                <stddev>0.103</stddev>
                 <bias_mean>0.0</bias_mean>
                 <bias_stddev>0.0</bias_stddev>
                 <dynamic_bias_stddev>1.5e-4</dynamic_bias_stddev>
@@ -113,7 +112,7 @@
             <x>
               <noise type="gaussian">
                 <mean>0.0</mean>
-                <stddev>1.008e-2</stddev>
+                <stddev>3.48</stddev>
                 <bias_mean>0.0</bias_mean>
                 <bias_stddev>0.0</bias_stddev>
                 <dynamic_bias_stddev>8.0e-3</dynamic_bias_stddev>
@@ -123,7 +122,7 @@
             <y>
               <noise type="gaussian">
                 <mean>0.0</mean>
-                <stddev>1.008e-2</stddev>
+                <stddev>2.40</stddev>
                 <bias_mean>0.0</bias_mean>
                 <bias_stddev>0.0</bias_stddev>
                 <dynamic_bias_stddev>8.0e-3</dynamic_bias_stddev>
@@ -133,7 +132,7 @@
             <z>
               <noise type="gaussian">
                 <mean>0.0</mean>
-                <stddev>1.086e-2</stddev>
+                <stddev>10.09</stddev>
                 <bias_mean>0.0</bias_mean>
                 <bias_stddev>0.0</bias_stddev>
                 <dynamic_bias_stddev>8.0e-3</dynamic_bias_stddev>
