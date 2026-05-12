@@ -92,13 +92,13 @@ def parse_rpm(data):
     return sec + nsec * 1e-9, vals
 
 
-def dynamics_vel_prediction(v, q, rpm, dt):
+def dynamics_vel_prediction(v_world, q, rpm, dt):
     """One-step velocity prediction (world frame)."""
     R = Rotation.from_quat(q).as_matrix()
     F_total = CT * np.sum(rpm ** 2)
     F_body = np.array([0.0, 0.0, F_total])
     a_inertial = R @ F_body / MASS + np.array([0.0, 0.0, -G])
-    return v + a_inertial * dt
+    return v_world + a_inertial * dt
 
 
 def dynamics_omega_prediction(omega, rpm, dt):
@@ -186,16 +186,22 @@ def main():
     res_w = np.zeros((N, 3))     # angular velocity residual (body frame)
     valid = np.zeros(N, dtype=bool)
 
+    # Convert odom body-frame velocity to world frame
+    od_vel_world = np.zeros_like(od_vel)
+    for i in range(N):
+        R = Rotation.from_quat(od_q[i]).as_matrix()
+        od_vel_world[i] = R @ od_vel[i]
+
     for i in range(1, N):
         dt = od_ts[i] - od_ts[i - 1]
         if dt <= 0 or dt > 0.05:
             continue
 
-        # Velocity prediction
-        v_pred = dynamics_vel_prediction(od_vel[i - 1], od_q[i - 1], rpm_interp[i - 1], dt)
-        res_vel[i] = od_vel[i] - v_pred
+        # Velocity prediction (world frame)
+        v_pred = dynamics_vel_prediction(od_vel_world[i - 1], od_q[i - 1], rpm_interp[i - 1], dt)
+        res_vel[i] = od_vel_world[i] - v_pred
 
-        # Angular velocity prediction
+        # Angular velocity prediction (body frame)
         w_pred = dynamics_omega_prediction(od_w[i - 1], rpm_interp[i - 1], dt)
         res_w[i] = od_w[i] - w_pred
 
@@ -206,7 +212,7 @@ def main():
     # ---- Prepare features and targets ----
     t_v = od_ts[valid]
     rpm_v = rpm_interp[valid]
-    vel_v = od_vel[valid]
+    vel_v = od_vel_world[valid]
     w_v = od_w[valid]
     q_v = od_q[valid]
     res_vel_v = res_vel[valid]
