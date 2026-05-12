@@ -14,7 +14,11 @@
       position_stddev: 0.005
       angle_stddev: 0.003
       axis_stddev: 0.05
-      linear_velocity_stddev: 0.05
-      angular_velocity_stddev: 0.08
+      linear_velocity_stddev_x: 0.010
+      linear_velocity_stddev_y: 0.007
+      linear_velocity_stddev_z: 0.022
+      angular_velocity_stddev_x: 0.124
+      angular_velocity_stddev_y: 0.168
+      angular_velocity_stddev_z: 0.123
       apply_noise: true
       delay_ms: 25.0  # Pure delay in milliseconds (0.0 = no delay)
