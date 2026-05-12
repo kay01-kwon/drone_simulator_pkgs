@@ -161,6 +161,17 @@ def main():
     od_ts -= t0
     rpm_ts -= t0
 
+    # Exclude ground contact: keep only flight phase (RPM > 4000)
+    t_flight_start = 6.0
+    t_flight_end = 46.0
+    flight_mask = (od_ts >= t_flight_start) & (od_ts <= t_flight_end)
+    od_ts = od_ts[flight_mask]
+    od_pos = od_pos[flight_mask]
+    od_q = od_q[flight_mask]
+    od_vel = od_vel[flight_mask]
+    od_w = od_w[flight_mask]
+    print(f"  Flight phase: {t_flight_start}-{t_flight_end}s, {len(od_ts)} samples")
+
     # Interpolate RPM to odom timestamps
     rpm_interp = np.zeros((len(od_ts), 6))
     for m in range(6):
