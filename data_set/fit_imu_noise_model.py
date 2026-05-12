@@ -6,20 +6,23 @@ Model:
 
 where Fᵢ = CT · RPMᵢ² is the individual rotor thrust.
 
-Reference values:
-  - Acceleration: f_body = R^T · (dv_odom/dt + g·e3)
-  - Angular velocity: ω_odom (EKF2 filtered)
+Reference (one-step prediction for both):
+  - Acceleration:
+      v_pred(t) = v_odom(t-dt) + [R(t-dt)·[0,0,F/m] + [0,0,-g]] · dt
+      a_ref(t) = [v_odom(t) - v_odom(t-dt)] / dt
+      f_ref_body(t) = R(t)^T · [a_ref(t) + g·e3]
+  - Angular velocity:
+      ω_pred(t) = ω_IMU(t-dt) + I⁻¹[τ - ω×Iω - b·ω] · dt
 
 Residuals:
-  - δa = a_IMU - f_body_ref
-  - δω = ω_IMU - ω_odom
+  - δa = a_IMU - f_ref_body
+  - δω = ω_IMU - ω_pred
 """
 
 import sqlite3
 import struct
 import numpy as np
 from scipy.interpolate import interp1d
-from scipy.signal import savgol_filter
 from scipy.spatial.transform import Rotation
 import matplotlib
 matplotlib.use('Agg')
@@ -29,7 +32,28 @@ from pathlib import Path
 CDR_BASE = 4
 G = 9.81
 CT = 1.255e-7
+MOMENT_CONST = 0.01569
 MASS = 3.188
+
+IXX = 0.06573874618
+IYY = 0.06535731789
+IZZ = 0.10317211827
+I_DIAG = np.array([IXX, IYY, IZZ])
+
+BX, BY, BZ = 0.115, 0.137, 0.184
+B_VEC = np.array([BX, BY, BZ])
+
+MOTOR_POS = np.array([
+    [0.2295, 0.1325, 0.062],
+    [0.0, 0.2650, 0.062],
+    [-0.2295, 0.1325, 0.062],
+    [-0.2295, -0.1325, 0.062],
+    [0.0, -0.2650, 0.062],
+    [0.2295, -0.1325, 0.062],
+])
+REACTION_SIGN = np.array([-1, +1, -1, +1, -1, +1])
+
+COM_OFFSET = np.array([-0.006, 0.0, 0.0])
 
 
 def align_cdr(rel, a):
@@ -93,6 +117,25 @@ def parse_rpm(data):
     return sec + nsec * 1e-9, vals
 
 
+def compute_torques(rpms, r_motors):
+    """Compute body-frame torque from RPM values."""
+    N = len(rpms)
+    torques = np.zeros((N, 3))
+    for i in range(N):
+        tau = np.zeros(3)
+        for m in range(6):
+            F_m = CT * rpms[i, m] ** 2
+            tau += np.cross(r_motors[m], [0, 0, F_m])
+            tau[2] += REACTION_SIGN[m] * MOMENT_CONST * F_m
+        torques[i] = tau
+    return torques
+
+
+def ang_dyn(omega, tau):
+    """Angular acceleration from Euler's equation."""
+    return (tau - np.cross(omega, I_DIAG * omega) - B_VEC * omega) / I_DIAG
+
+
 def main():
     bag_dir = Path("data_set/2026_05_05_free_flight")
     bag_path = str(bag_dir / "02_ct_1p255" / "02_ct_1p255_0.db3")
@@ -100,7 +143,8 @@ def main():
     save_dir.mkdir(parents=True, exist_ok=True)
 
     print("=" * 60)
-    print("IMU Noise Model Fitting: σ² = c₀² + α² · Σ Fᵢ²")
+    print("IMU Noise Model Fitting (One-Step Prediction)")
+    print("σ² = c₀² + α² · Σ Fᵢ²")
     print("=" * 60)
 
     # ---- Parse all data ----
@@ -122,19 +166,16 @@ def main():
     imu_acc = np.array(imu_acc)
     print(f"  IMU: {len(imu_ts)} samples")
 
-    od_ts, od_q, od_vel, od_w = [], [], [], []
+    od_ts, od_vel = [], []
     for _, data in read_bag_topic(bag_path, "/mavros/local_position/odom"):
         try:
             t, qx, qy, qz, qw, vx, vy, vz, wx, wy, wz = parse_odom(data)
             od_ts.append(t)
-            od_q.append([qx, qy, qz, qw])
             od_vel.append([vx, vy, vz])
-            od_w.append([wx, wy, wz])
         except:
             continue
     od_ts = np.array(od_ts)
     od_vel = np.array(od_vel)
-    od_w = np.array(od_w)
     print(f"  Odom: {len(od_ts)} samples")
 
     rpm_ts, rpm_vals = [], []
@@ -158,117 +199,148 @@ def main():
     t_start = 5.0
     t_end = min(imu_ts[-1], od_ts[-1], rpm_ts[-1]) - 5.0
 
-    # ---- Compute odom acceleration (world frame, Savitzky-Golay) ----
-    print("\n[2] Computing odom acceleration (world frame)...")
-    dt_od = np.median(np.diff(od_ts))
-    od_acc = savgol_filter(od_vel, 31, 3, deriv=1, delta=dt_od, axis=0)
-
-    # ---- Interpolate to IMU time grid ----
+    # ---- Interpolate odom velocity & RPM to IMU time grid ----
     mask = (imu_ts >= t_start) & (imu_ts <= t_end)
     t_c = imu_ts[mask]
     N = len(t_c)
-    print(f"  Analysis window: {t_start:.1f}-{t_end:.1f}s, N={N}")
+    print(f"\n[2] Analysis window: {t_start:.1f}-{t_end:.1f}s, N={N}")
 
     imu_acc_c = imu_acc[mask]
     imu_w_c = imu_w[mask]
     imu_q_c = imu_q[mask]
 
-    od_acc_interp = np.zeros((N, 3))
-    od_w_interp = np.zeros((N, 3))
+    od_vel_interp = np.zeros((N, 3))
     for ax in range(3):
-        f = interp1d(od_ts, od_acc[:, ax], kind='linear', fill_value='extrapolate')
-        od_acc_interp[:, ax] = f(t_c)
-        f = interp1d(od_ts, od_w[:, ax], kind='linear', fill_value='extrapolate')
-        od_w_interp[:, ax] = f(t_c)
+        f = interp1d(od_ts, od_vel[:, ax], kind='linear', fill_value='extrapolate')
+        od_vel_interp[:, ax] = f(t_c)
 
     rpm_interp = np.zeros((N, 6))
     for m in range(6):
         f = interp1d(rpm_ts, rpm_vals[:, m], kind='previous', fill_value='extrapolate')
         rpm_interp[:, m] = f(t_c)
 
-    # ---- Compute body-frame specific force reference ----
-    print("[3] Computing body-frame references...")
+    # ---- Compute motor torques ----
+    print("[3] Computing motor torques...")
+    r_motors = MOTOR_POS - COM_OFFSET
+    torques = compute_torques(rpm_interp, r_motors)
+
+    # ---- One-step prediction: acceleration (translational) ----
+    print("[4] One-step acceleration prediction...")
+    # v_pred(t) = v_odom(t-dt) + [R(t-dt)·[0,0,F(t-dt)/m] + [0,0,-g]] · dt
+    # a_onestep(t) = [v_odom(t) - v_odom(t-dt)] / dt   (actual from odom)
+    # f_ref_body(t) = R(t)^T · [a_onestep + g·e3]
+
     g_vec = np.array([0.0, 0.0, G])
+    delta_a = np.zeros((N, 3))
+    valid_a = np.ones(N, dtype=bool)
 
-    a_ref_body = np.zeros((N, 3))
-    for i in range(N):
-        R = Rotation.from_quat(imu_q_c[i]).as_matrix()
-        a_ref_body[i] = R.T @ (od_acc_interp[i] + g_vec)
+    for i in range(1, N):
+        dt = t_c[i] - t_c[i - 1]
+        if dt <= 0 or dt > 0.05:
+            valid_a[i] = False
+            continue
 
-    w_ref = od_w_interp
+        # Actual inertial acceleration from odom finite difference
+        a_odom = (od_vel_interp[i] - od_vel_interp[i - 1]) / dt
 
-    # ---- Compute residuals ----
-    delta_a = imu_acc_c - a_ref_body
-    delta_w = imu_w_c - w_ref
+        # Body-frame specific force reference
+        R_curr = Rotation.from_quat(imu_q_c[i]).as_matrix()
+        f_ref_body = R_curr.T @ (a_odom + g_vec)
+
+        # Residual: IMU - reference
+        delta_a[i] = imu_acc_c[i] - f_ref_body
+
+    valid_a[0] = False
+
+    # ---- One-step prediction: angular velocity ----
+    print("[5] One-step angular velocity prediction...")
+    delta_w = np.zeros((N, 3))
+    valid_w = np.ones(N, dtype=bool)
+
+    for i in range(1, N):
+        dt = t_c[i] - t_c[i - 1]
+        if dt <= 0 or dt > 0.05:
+            valid_w[i] = False
+            continue
+
+        wdot = ang_dyn(imu_w_c[i - 1], torques[i - 1])
+        w_pred = imu_w_c[i - 1] + wdot * dt
+        delta_w[i] = imu_w_c[i] - w_pred
+
+    valid_w[0] = False
+
+    # ---- Use only valid samples ----
+    valid = valid_a & valid_w
+    t_v = t_c[valid]
+    delta_a_v = delta_a[valid]
+    delta_w_v = delta_w[valid]
+    rpm_v = rpm_interp[valid]
+    N_v = len(t_v)
+    print(f"  Valid samples: {N_v}/{N}")
 
     # ---- Compute per-motor thrust and ΣFi² ----
-    Fi = CT * rpm_interp ** 2  # (N, 6) individual thrusts
-    sum_Fi2 = np.sum(Fi ** 2, axis=1)  # (N,) Σ Fᵢ²
+    Fi_v = CT * rpm_v ** 2
+    sum_Fi2_v = np.sum(Fi_v ** 2, axis=1)
 
     # ---- Windowed variance estimation ----
-    print("[4] Fitting noise model (windowed variance)...")
-    win_samples = 100  # ~0.5s at 200Hz IMU
-    n_windows = N // win_samples
+    print("\n[6] Fitting noise model (windowed variance)...")
+    win_samples = 100
+    n_windows = N_v // win_samples
 
     win_var_a = np.zeros((n_windows, 3))
     win_var_w = np.zeros((n_windows, 3))
     win_sum_Fi2 = np.zeros(n_windows)
-    win_t = np.zeros(n_windows)
 
     for k in range(n_windows):
         s = k * win_samples
         e = s + win_samples
         for j in range(3):
-            win_var_a[k, j] = np.var(delta_a[s:e, j])
-            win_var_w[k, j] = np.var(delta_w[s:e, j])
-        win_sum_Fi2[k] = np.mean(sum_Fi2[s:e])
-        win_t[k] = np.mean(t_c[s:e])
+            win_var_a[k, j] = np.var(delta_a_v[s:e, j])
+            win_var_w[k, j] = np.var(delta_w_v[s:e, j])
+        win_sum_Fi2[k] = np.mean(sum_Fi2_v[s:e])
 
     # ---- Linear regression: var = c0² + α² · ΣFi² ----
-    # Design matrix: [1, ΣFi²] → [c0², α²]
     A = np.column_stack([np.ones(n_windows), win_sum_Fi2])
 
     print(f"\n{'=' * 60}")
     print(f"Noise Model: σ² = c₀² + α² · Σ Fᵢ²")
     print(f"{'=' * 60}")
 
-    params_a = np.zeros((3, 2))  # [c0², α²] for each accel axis
-    params_w = np.zeros((3, 2))  # [c0², α²] for each gyro axis
+    params_a = np.zeros((3, 2))
+    params_w = np.zeros((3, 2))
 
     a_labels = ['ax', 'ay', 'az']
     w_labels = ['ωx', 'ωy', 'ωz']
 
-    print(f"\n--- Accelerometer ---")
+    print(f"\n--- Accelerometer (ref: odom one-step) ---")
     print(f"{'Axis':>6s} {'c₀ (m/s²)':>12s} {'α (m/s²/N)':>14s} {'R²':>8s}")
     for j in range(3):
-        x = A
         y = win_var_a[:, j]
-        coef, res, _, _ = np.linalg.lstsq(x, y, rcond=None)
+        coef, _, _, _ = np.linalg.lstsq(A, y, rcond=None)
         params_a[j] = coef
         c0 = np.sqrt(max(coef[0], 0))
         alpha = np.sqrt(max(coef[1], 0))
-        y_pred = x @ coef
+        y_pred = A @ coef
         ss_res = np.sum((y - y_pred) ** 2)
         ss_tot = np.sum((y - np.mean(y)) ** 2)
         r2 = 1 - ss_res / ss_tot if ss_tot > 0 else 0
         print(f"{a_labels[j]:>6s} {c0:12.4f} {alpha:14.4f} {r2:8.4f}")
 
-    print(f"\n--- Gyroscope ---")
+    print(f"\n--- Gyroscope (ref: torque model one-step) ---")
     print(f"{'Axis':>6s} {'c₀ (rad/s)':>12s} {'α (rad/s/N)':>14s} {'R²':>8s}")
     for j in range(3):
-        x = A
         y = win_var_w[:, j]
-        coef, res, _, _ = np.linalg.lstsq(x, y, rcond=None)
+        coef, _, _, _ = np.linalg.lstsq(A, y, rcond=None)
         params_w[j] = coef
         c0 = np.sqrt(max(coef[0], 0))
         alpha = np.sqrt(max(coef[1], 0))
-        y_pred = x @ coef
+        y_pred = A @ coef
         ss_res = np.sum((y - y_pred) ** 2)
         ss_tot = np.sum((y - np.mean(y)) ** 2)
         r2 = 1 - ss_res / ss_tot if ss_tot > 0 else 0
         print(f"{w_labels[j]:>6s} {c0:12.6f} {alpha:14.6f} {r2:8.4f}")
 
-    # ---- Summary: equivalent Gazebo noise stddev at hover ----
+    # ---- Summary at hover ----
     hover_rpm = np.sqrt(MASS * G / (6 * CT))
     hover_Fi = CT * hover_rpm ** 2
     hover_sum_Fi2 = 6 * hover_Fi ** 2
@@ -282,16 +354,23 @@ def main():
     print(f"{'Axis':>6s} {'σ_total':>12s} {'σ_c0':>12s} {'σ_motor':>12s}")
     for j in range(3):
         var_total = max(params_a[j, 0], 0) + max(params_a[j, 1], 0) * hover_sum_Fi2
-        sigma_total = np.sqrt(var_total)
+        sigma_t = np.sqrt(var_total)
         sigma_c0 = np.sqrt(max(params_a[j, 0], 0))
-        sigma_motor = np.sqrt(max(params_a[j, 1], 0) * hover_sum_Fi2)
-        print(f"{a_labels[j]:>6s} {sigma_total:12.4f} {sigma_c0:12.4f} {sigma_motor:12.4f} m/s²")
+        sigma_m = np.sqrt(max(params_a[j, 1], 0) * hover_sum_Fi2)
+        print(f"{a_labels[j]:>6s} {sigma_t:12.4f} {sigma_c0:12.4f} {sigma_m:12.4f} m/s²")
     for j in range(3):
         var_total = max(params_w[j, 0], 0) + max(params_w[j, 1], 0) * hover_sum_Fi2
-        sigma_total = np.sqrt(var_total)
+        sigma_t = np.sqrt(var_total)
         sigma_c0 = np.sqrt(max(params_w[j, 0], 0))
-        sigma_motor = np.sqrt(max(params_w[j, 1], 0) * hover_sum_Fi2)
-        print(f"{w_labels[j]:>6s} {sigma_total:12.6f} {sigma_c0:12.6f} {sigma_motor:12.6f} rad/s")
+        sigma_m = np.sqrt(max(params_w[j, 1], 0) * hover_sum_Fi2)
+        print(f"{w_labels[j]:>6s} {sigma_t:12.6f} {sigma_c0:12.6f} {sigma_m:12.6f} rad/s")
+
+    # ---- Overall std (for quick reference) ----
+    print(f"\n--- Overall residual std ---")
+    for j in range(3):
+        print(f"  {a_labels[j]}: {np.std(delta_a_v[:, j]):.4f} m/s²")
+    for j in range(3):
+        print(f"  {w_labels[j]}: {np.std(delta_w_v[:, j]):.6f} rad/s")
 
     # ---- Save model ----
     model_path = save_dir / "imu_noise_model.npz"
@@ -300,16 +379,19 @@ def main():
              params_w=params_w,
              CT=CT,
              hover_rpm=hover_rpm,
-             description="var = params[:,0] + params[:,1] * sum_Fi2")
+             com_offset=COM_OFFSET,
+             description="var = params[:,0] + params[:,1] * sum_Fi2; one-step prediction ref")
     print(f"\n  Model saved: {model_path}")
 
     # ---- Plot ----
-    print("\n[5] Generating plots...")
+    print("\n[7] Generating plots...")
+    # Use full arrays with valid mask for plotting
+    sum_Fi2_full = np.sum((CT * rpm_interp ** 2) ** 2, axis=1)
 
     fig, axes = plt.subplots(4, 3, figsize=(18, 16))
     fig.suptitle(
-        'IMU Noise Model: σ² = c₀² + α² · Σ Fᵢ²\n'
-        f'Reference: a_ref = R^T·(dv_odom/dt + g·e3),  ω_ref = ω_odom',
+        'IMU Noise Model (One-Step Prediction): σ² = c₀² + α² · Σ Fᵢ²\n'
+        'Accel ref: R^T·(Δv_odom/dt + g·e3)  |  Gyro ref: ω + I⁻¹[τ−ω×Iω−bω]·dt',
         fontsize=13
     )
 
@@ -318,7 +400,7 @@ def main():
         ax = axes[0, j]
         ax.scatter(win_sum_Fi2, win_var_a[:, j], s=3, alpha=0.4, c='b', label='Data')
         x_fit = np.linspace(0, win_sum_Fi2.max() * 1.05, 100)
-        y_fit = max(params_a[j, 0], 0) + max(params_a[j, 1], 0) * x_fit
+        y_fit = np.maximum(params_a[j, 0], 0) + np.maximum(params_a[j, 1], 0) * x_fit
         ax.plot(x_fit, y_fit, 'r-', lw=2, label='Fit')
         c0 = np.sqrt(max(params_a[j, 0], 0))
         alpha = np.sqrt(max(params_a[j, 1], 0))
@@ -333,7 +415,7 @@ def main():
         ax = axes[1, j]
         ax.scatter(win_sum_Fi2, win_var_w[:, j], s=3, alpha=0.4, c='b', label='Data')
         x_fit = np.linspace(0, win_sum_Fi2.max() * 1.05, 100)
-        y_fit = max(params_w[j, 0], 0) + max(params_w[j, 1], 0) * x_fit
+        y_fit = np.maximum(params_w[j, 0], 0) + np.maximum(params_w[j, 1], 0) * x_fit
         ax.plot(x_fit, y_fit, 'r-', lw=2, label='Fit')
         c0 = np.sqrt(max(params_w[j, 0], 0))
         alpha = np.sqrt(max(params_w[j, 1], 0))
@@ -344,16 +426,16 @@ def main():
         ax.grid(True, alpha=0.3)
 
     # Row 2: residual time series (accel)
-    t_plot = t_c - t_c[0]
+    t_plot = t_v - t_v[0]
     for j in range(3):
         ax = axes[2, j]
-        ax.plot(t_plot, delta_a[:, j], 'b-', alpha=0.3, lw=0.3)
+        ax.plot(t_plot, delta_a_v[:, j], 'b-', alpha=0.3, lw=0.3)
         sigma_pred = np.sqrt(
             np.maximum(params_a[j, 0], 0)
-            + np.maximum(params_a[j, 1], 0) * sum_Fi2
+            + np.maximum(params_a[j, 1], 0) * sum_Fi2_v
         )
-        ax.plot(t_plot, sigma_pred, 'r-', lw=1, label='+σ model')
-        ax.plot(t_plot, -sigma_pred, 'r-', lw=1, label='−σ model')
+        ax.plot(t_plot, sigma_pred, 'r-', lw=1, label='+σ')
+        ax.plot(t_plot, -sigma_pred, 'r-', lw=1, label='−σ')
         ax.set_title(f'δ{a_labels[j]} residual')
         ax.set_ylabel('m/s²')
         ax.legend(fontsize=7)
@@ -362,13 +444,13 @@ def main():
     # Row 3: residual time series (gyro)
     for j in range(3):
         ax = axes[3, j]
-        ax.plot(t_plot, delta_w[:, j], 'b-', alpha=0.3, lw=0.3)
+        ax.plot(t_plot, delta_w_v[:, j], 'b-', alpha=0.3, lw=0.3)
         sigma_pred = np.sqrt(
             np.maximum(params_w[j, 0], 0)
-            + np.maximum(params_w[j, 1], 0) * sum_Fi2
+            + np.maximum(params_w[j, 1], 0) * sum_Fi2_v
         )
-        ax.plot(t_plot, sigma_pred, 'r-', lw=1, label='+σ model')
-        ax.plot(t_plot, -sigma_pred, 'r-', lw=1, label='−σ model')
+        ax.plot(t_plot, sigma_pred, 'r-', lw=1, label='+σ')
+        ax.plot(t_plot, -sigma_pred, 'r-', lw=1, label='−σ')
         ax.set_title(f'δ{w_labels[j]} residual')
         ax.set_ylabel('rad/s')
         ax.legend(fontsize=7)
@@ -387,9 +469,9 @@ def main():
     for j in range(3):
         sigma = np.sqrt(
             np.maximum(params_a[j, 0], 0)
-            + np.maximum(params_a[j, 1], 0) * sum_Fi2
+            + np.maximum(params_a[j, 1], 0) * sum_Fi2_v
         )
-        normalized = delta_a[:, j] / np.maximum(sigma, 1e-10)
+        normalized = delta_a_v[:, j] / np.maximum(sigma, 1e-10)
         ax = axes2[0, j]
         ax.hist(normalized, bins=200, density=True, alpha=0.7, color='b')
         x_g = np.linspace(-5, 5, 200)
@@ -401,9 +483,9 @@ def main():
     for j in range(3):
         sigma = np.sqrt(
             np.maximum(params_w[j, 0], 0)
-            + np.maximum(params_w[j, 1], 0) * sum_Fi2
+            + np.maximum(params_w[j, 1], 0) * sum_Fi2_v
         )
-        normalized = delta_w[:, j] / np.maximum(sigma, 1e-10)
+        normalized = delta_w_v[:, j] / np.maximum(sigma, 1e-10)
         ax = axes2[1, j]
         ax.hist(normalized, bins=200, density=True, alpha=0.7, color='b')
         x_g = np.linspace(-5, 5, 200)
