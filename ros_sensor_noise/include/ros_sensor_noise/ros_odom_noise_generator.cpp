@@ -14,8 +14,12 @@ RosOdomNoiseGenerator::RosOdomNoiseGenerator()
     node_->declare_parameter("noise.position_stddev", 0.002);
     node_->declare_parameter("noise.angle_stddev", 0.01);
     node_->declare_parameter("noise.axis_stddev", 0.005);
-    node_->declare_parameter("noise.linear_velocity_stddev", 0.01);
-    node_->declare_parameter("noise.angular_velocity_stddev", 0.01);
+    node_->declare_parameter("noise.linear_velocity_stddev_x", 0.01);
+    node_->declare_parameter("noise.linear_velocity_stddev_y", 0.01);
+    node_->declare_parameter("noise.linear_velocity_stddev_z", 0.01);
+    node_->declare_parameter("noise.angular_velocity_stddev_x", 0.01);
+    node_->declare_parameter("noise.angular_velocity_stddev_y", 0.01);
+    node_->declare_parameter("noise.angular_velocity_stddev_z", 0.01);
     node_->declare_parameter("noise.apply_noise", true);
 
     // Declare delay parameter
@@ -36,8 +40,12 @@ RosOdomNoiseGenerator::RosOdomNoiseGenerator()
     noise_params_.axis_noise_stddev[0] = axis_stddev;
     noise_params_.axis_noise_stddev[1] = axis_stddev;
     noise_params_.axis_noise_stddev[2] = axis_stddev;
-    noise_params_.linear_velocity_noise_stddev = node_->get_parameter("noise.linear_velocity_stddev").as_double();
-    noise_params_.angular_velocity_noise_stddev = node_->get_parameter("noise.angular_velocity_stddev").as_double();
+    noise_params_.linear_velocity_noise_stddev[0] = node_->get_parameter("noise.linear_velocity_stddev_x").as_double();
+    noise_params_.linear_velocity_noise_stddev[1] = node_->get_parameter("noise.linear_velocity_stddev_y").as_double();
+    noise_params_.linear_velocity_noise_stddev[2] = node_->get_parameter("noise.linear_velocity_stddev_z").as_double();
+    noise_params_.angular_velocity_noise_stddev[0] = node_->get_parameter("noise.angular_velocity_stddev_x").as_double();
+    noise_params_.angular_velocity_noise_stddev[1] = node_->get_parameter("noise.angular_velocity_stddev_y").as_double();
+    noise_params_.angular_velocity_noise_stddev[2] = node_->get_parameter("noise.angular_velocity_stddev_z").as_double();
     noise_enabled_ = node_->get_parameter("noise.apply_noise").as_bool();
 
     // Load delay parameter
@@ -54,10 +62,16 @@ RosOdomNoiseGenerator::RosOdomNoiseGenerator()
     RCLCPP_INFO(node_->get_logger(), "=== Noise Configuration ===");
     RCLCPP_INFO(node_->get_logger(), "Noise enabled: %s", noise_enabled_ ? "true" : "false");
     RCLCPP_INFO(node_->get_logger(), "Position noise stddev: %.6f", noise_params_.pose_noise_stddev);
-    RCLCPP_INFO(node_->get_logger(), "Linear velocity noise stddev: %.6f", noise_params_.linear_velocity_noise_stddev);
+    RCLCPP_INFO(node_->get_logger(), "Linear velocity noise stddev: [%.6f, %.6f, %.6f]",
+        noise_params_.linear_velocity_noise_stddev[0],
+        noise_params_.linear_velocity_noise_stddev[1],
+        noise_params_.linear_velocity_noise_stddev[2]);
     RCLCPP_INFO(node_->get_logger(), "Angle noise stddev: %.6f", noise_params_.angle_noise_stddev);
     RCLCPP_INFO(node_->get_logger(), "Axis noise stddev: %.6f", axis_stddev);
-    RCLCPP_INFO(node_->get_logger(), "Angular velocity noise stddev: %.6f", noise_params_.angular_velocity_noise_stddev);
+    RCLCPP_INFO(node_->get_logger(), "Angular velocity noise stddev: [%.6f, %.6f, %.6f]",
+        noise_params_.angular_velocity_noise_stddev[0],
+        noise_params_.angular_velocity_noise_stddev[1],
+        noise_params_.angular_velocity_noise_stddev[2]);
     RCLCPP_INFO(node_->get_logger(), "=== Delay Configuration ===");
     RCLCPP_INFO(node_->get_logger(), "Pure delay: %.1f ms", delay_ms_);
     RCLCPP_INFO(node_->get_logger(), "=== Offset Configuration ===");
@@ -197,12 +211,13 @@ Odometry RosOdomNoiseGenerator::applyNoise(const Odometry& odom)
     noisy_odom.pose.pose.position.y += pos_noise(gen_);
     noisy_odom.pose.pose.position.z += pos_noise(gen_);
 
-    // Apply noise to linear velocity
-    std::normal_distribution<double> lin_vel_noise(
-        0.0, noise_params_.linear_velocity_noise_stddev);
-    noisy_odom.twist.twist.linear.x += lin_vel_noise(gen_);
-    noisy_odom.twist.twist.linear.y += lin_vel_noise(gen_);
-    noisy_odom.twist.twist.linear.z += lin_vel_noise(gen_);
+    // Apply per-axis noise to linear velocity
+    std::normal_distribution<double> lin_vel_noise_x(0.0, noise_params_.linear_velocity_noise_stddev[0]);
+    std::normal_distribution<double> lin_vel_noise_y(0.0, noise_params_.linear_velocity_noise_stddev[1]);
+    std::normal_distribution<double> lin_vel_noise_z(0.0, noise_params_.linear_velocity_noise_stddev[2]);
+    noisy_odom.twist.twist.linear.x += lin_vel_noise_x(gen_);
+    noisy_odom.twist.twist.linear.y += lin_vel_noise_y(gen_);
+    noisy_odom.twist.twist.linear.z += lin_vel_noise_z(gen_);
 
     // Apply noise to quaternion using angle-axis representation
     Eigen::Quaterniond quat(
@@ -242,12 +257,13 @@ Odometry RosOdomNoiseGenerator::applyNoise(const Odometry& odom)
     noisy_odom.pose.pose.orientation.y = noisy_quat.y();
     noisy_odom.pose.pose.orientation.z = noisy_quat.z();
 
-    // Apply noise to angular velocity
-    std::normal_distribution<double> ang_vel_noise(
-        0.0, noise_params_.angular_velocity_noise_stddev);
-    noisy_odom.twist.twist.angular.x += ang_vel_noise(gen_);
-    noisy_odom.twist.twist.angular.y += ang_vel_noise(gen_);
-    noisy_odom.twist.twist.angular.z += ang_vel_noise(gen_);
+    // Apply per-axis noise to angular velocity
+    std::normal_distribution<double> ang_vel_noise_x(0.0, noise_params_.angular_velocity_noise_stddev[0]);
+    std::normal_distribution<double> ang_vel_noise_y(0.0, noise_params_.angular_velocity_noise_stddev[1]);
+    std::normal_distribution<double> ang_vel_noise_z(0.0, noise_params_.angular_velocity_noise_stddev[2]);
+    noisy_odom.twist.twist.angular.x += ang_vel_noise_x(gen_);
+    noisy_odom.twist.twist.angular.y += ang_vel_noise_y(gen_);
+    noisy_odom.twist.twist.angular.z += ang_vel_noise_z(gen_);
 
     return noisy_odom;
 }

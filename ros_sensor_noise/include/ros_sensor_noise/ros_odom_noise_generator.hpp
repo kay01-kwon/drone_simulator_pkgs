@@ -26,10 +26,10 @@ using geometry_msgs::msg::PoseStamped;
 struct NoiseParameters
 {
     double pose_noise_stddev;
-    double linear_velocity_noise_stddev;
+    double linear_velocity_noise_stddev[3];
     double angle_noise_stddev;
     double axis_noise_stddev[3];
-    double angular_velocity_noise_stddev;
+    double angular_velocity_noise_stddev[3];
 };
 
 class RosOdomNoiseGenerator
