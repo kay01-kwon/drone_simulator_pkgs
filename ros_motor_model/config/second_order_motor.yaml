@@ -2,7 +2,7 @@
   ros__parameters:
     motor:
       uav_type: "HEXA"
-      pure: true
+      pure: false
       zeta: 0.925
       omega_n: 22.42
       p1: 25.16687
