@@ -1,0 +1,9 @@
+/home/kay/rotors_sim_ws/src/drone_simulator_pkgs/build/CMakeFiles/uninstall.dir
+/home/kay/rotors_sim_ws/src/drone_simulator_pkgs/build/CMakeFiles/drone_bringup_uninstall.dir
+/home/kay/rotors_sim_ws/src/drone_simulator_pkgs/build/CMakeFiles/test.dir
+/home/kay/rotors_sim_ws/src/drone_simulator_pkgs/build/CMakeFiles/edit_cache.dir
+/home/kay/rotors_sim_ws/src/drone_simulator_pkgs/build/CMakeFiles/rebuild_cache.dir
+/home/kay/rotors_sim_ws/src/drone_simulator_pkgs/build/CMakeFiles/list_install_components.dir
+/home/kay/rotors_sim_ws/src/drone_simulator_pkgs/build/CMakeFiles/install.dir
+/home/kay/rotors_sim_ws/src/drone_simulator_pkgs/build/CMakeFiles/install/local.dir
+/home/kay/rotors_sim_ws/src/drone_simulator_pkgs/build/CMakeFiles/install/strip.dir
