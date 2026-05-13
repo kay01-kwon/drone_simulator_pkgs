@@ -4,6 +4,8 @@
 #include "ode_solver/ode_rk4_solver.hpp"
 #include "utils/type_def.h"
 #include <algorithm>
+#include <deque>
+#include <utility>
 
 struct SecondOrderMotorParams
 {
@@ -15,6 +17,7 @@ struct SecondOrderMotorParams
     bool pure{false};
     double zeta{0.925};
     double omega_n{3.57};
+    double delay_ms{0.0};
 };
 
 
@@ -34,6 +37,8 @@ class SecondOrderMotorModel
 
     private:
 
+    double get_delayed_cmd(const double &time_curr);
+
     void compute_motor_dynamics(const Vector2d &state,
                                 Vector2d &dot_state,
                                 const double &t_prev);
@@ -46,6 +51,8 @@ class SecondOrderMotorModel
     double t_curr_{0.0};
 
     double rpm_cmd_{0.0};
+    double delay_s_{0.0};
+    std::deque<std::pair<double, double>> cmd_history_;
     Vector2d state_;
 };
 
