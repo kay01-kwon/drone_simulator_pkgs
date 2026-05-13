@@ -5,6 +5,7 @@ SecondOrderMotorModel::SecondOrderMotorModel()
     rk4_solver_ = new OdeRk4Solver<Vector2d>();
     state_.setZero();
     rpm_cmd_ = 0.0;
+    delay_s_ = 0.0;
 }
 
 SecondOrderMotorModel::SecondOrderMotorModel(const SecondOrderMotorParams& params)
@@ -13,6 +14,7 @@ SecondOrderMotorModel::SecondOrderMotorModel(const SecondOrderMotorParams& param
     rk4_solver_ = new OdeRk4Solver<Vector2d>();
     state_.setZero();
     rpm_cmd_ = 0.0;
+    delay_s_ = params_.delay_ms / 1000.0;
 }
 
 void SecondOrderMotorModel::set_initial_time(const double &t_init)
@@ -24,11 +26,22 @@ void SecondOrderMotorModel::set_initial_time(const double &t_init)
 void SecondOrderMotorModel::set_state(const double &rpm_cmd,
                                const double &time_curr)
 {
-    rpm_cmd_ = rpm_cmd;
     t_curr_ = time_curr;
     double dt = t_curr_ - t_prev_;
 
-    // Run the rk4 solver to compute the new motor state
+    if (delay_s_ > 0.0) {
+        cmd_history_.emplace_back(time_curr, rpm_cmd);
+
+        double t_cutoff = time_curr - delay_s_ * 2.0;
+        while (cmd_history_.size() > 2 && cmd_history_.front().first < t_cutoff) {
+            cmd_history_.pop_front();
+        }
+
+        rpm_cmd_ = get_delayed_cmd(time_curr);
+    } else {
+        rpm_cmd_ = rpm_cmd;
+    }
+
     rk4_solver_->do_step(
         [this](const Vector2d &motor_state,
                 Vector2d &motor_dot_state,
@@ -45,13 +58,38 @@ void SecondOrderMotorModel::set_state(const double &rpm_cmd,
         state_(1) = std::clamp(state_(1), -params_.alpha_max, params_.alpha_max);
     }
 
-    
     t_prev_ = t_curr_;
 }
 
 void SecondOrderMotorModel::get_state(double &rpm_out)
 {
     rpm_out = state_(0);
+}
+
+double SecondOrderMotorModel::get_delayed_cmd(const double &time_curr)
+{
+    double t_target = time_curr - delay_s_;
+
+    if (cmd_history_.empty()) {
+        return 0.0;
+    }
+
+    if (t_target <= cmd_history_.front().first) {
+        return cmd_history_.front().second;
+    }
+
+    for (size_t i = 1; i < cmd_history_.size(); ++i) {
+        if (cmd_history_[i].first >= t_target) {
+            double t0 = cmd_history_[i - 1].first;
+            double t1 = cmd_history_[i].first;
+            double v0 = cmd_history_[i - 1].second;
+            double v1 = cmd_history_[i].second;
+            double alpha = (t_target - t0) / (t1 - t0);
+            return v0 + alpha * (v1 - v0);
+        }
+    }
+
+    return cmd_history_.back().second;
 }
 
 void SecondOrderMotorModel::compute_motor_dynamics(const Vector2d &state,
