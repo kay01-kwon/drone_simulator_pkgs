@@ -14,6 +14,14 @@
       angular_velocity_stddev_x: 0.124
       angular_velocity_stddev_y: 0.168
       angular_velocity_stddev_z: 0.123
+      angular_velocity_colored_noise: true
+      angular_velocity_noise_cutoff_hz: 10.0
+      angular_velocity_noise_lo_stddev_x: 0.055
+      angular_velocity_noise_lo_stddev_y: 0.055
+      angular_velocity_noise_lo_stddev_z: 0.030
+      angular_velocity_noise_hi_stddev_x: 0.124
+      angular_velocity_noise_hi_stddev_y: 0.124
+      angular_velocity_noise_hi_stddev_z: 0.095
       apply_noise: true
       delay_ms: 0.0
       z_offset: 0.052
