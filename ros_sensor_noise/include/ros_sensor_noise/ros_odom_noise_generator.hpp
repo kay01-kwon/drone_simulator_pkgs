@@ -6,8 +6,6 @@
 #include <functional>
 #include <memory>
 #include <string>
-#include <vector>
-#include <deque>
 #include <random>
 
 #include <nav_msgs/msg/odometry.hpp>
@@ -48,12 +46,6 @@ class RosOdomNoiseGenerator
 
     Odometry applyNoise(const Odometry& odom);
 
-    Odometry interpolate(const Odometry& odom_a,
-                         const Odometry& odom_b,
-                         double alpha);
-
-    void configure();
-
     rclcpp::Node::SharedPtr node_;
     rclcpp::Subscription<Odometry>::SharedPtr odom_sub_;
     rclcpp::Publisher<Odometry>::SharedPtr noisy_odom_pub_;
@@ -68,12 +60,6 @@ class RosOdomNoiseGenerator
 
     // Position offset (e.g., IMU mount offset from base_link)
     double z_offset_{0.0};
-
-    // Pure delay buffer and parameters
-    double delay_ms_{0.0};
-    int64_t delay_ns_{0};
-    std::deque<Odometry> noisy_odom_buffer_;
-    static constexpr int64_t MAX_BUFFER_DURATION_NS = 500000000LL; // 500 ms
 
 };
 
