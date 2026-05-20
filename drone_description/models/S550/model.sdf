@@ -933,9 +933,9 @@
         filename="AngularDamping"
         name="angular_damping::AngularDamping">
         <link_name>base_link</link_name>
-        <b_x>0.115</b_x>
-        <b_y>0.137</b_y>
-        <b_z>0.184</b_z>
+        <b_x>0.3</b_x>
+        <b_y>0.3</b_y>
+        <b_z>0.3</b_z>
       </plugin>
 
   </model>
