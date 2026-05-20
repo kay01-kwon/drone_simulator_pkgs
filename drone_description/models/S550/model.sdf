@@ -10,14 +10,14 @@
       <inertial>
         <!-- Center of mass -->
         <pose>-0.006 0.0 0.0 0 0 0</pose>
-        <mass>3.050</mass>
+        <mass>3.066</mass>
         <inertia>
-          <ixx>0.06573874618</ixx>
-          <ixy>-0.00000255066</ixy>
-          <ixz>0.000058391</ixz>
-          <iyy>0.06535731789</iyy>
-          <iyz>0.00099130575</iyz>
-          <izz>0.10317211827</izz>
+          <ixx>0.051084619</ixx>
+          <ixy>-0.000029181</ixy>
+          <ixz>0.000040041</ixz>
+          <iyy>0.050563713</iyy>
+          <iyz>0.001226869</iyz>
+          <izz>0.073831131</izz>
         </inertia>
       </inertial>
 			<collision name="base_link_collision">
