@@ -3,9 +3,9 @@
     motor:
       uav_type: "HEXA"
       pure: true
-      zeta: 0.7814
-      omega_n: 21.74
-      delay_ms: 15.67
+      zeta: 1.2859
+      omega_n: 32.71
+      delay_ms: 30.0
       p1: 25.16687
       p2: 0.003933
       p3: 515.605
