@@ -5,8 +5,8 @@
       odom_output: "/mavros/local_position/odom"
       pose_output: "/mavros/vision_pose/pose"
     noise:
-      position_stddev: 0.00051
-      angle_stddev: 0.00017
+      position_stddev: 0.005
+      angle_stddev: 0.005
       axis_stddev: 0.005
       linear_velocity_stddev_x: 0.028
       linear_velocity_stddev_y: 0.022
@@ -14,14 +14,7 @@
       angular_velocity_stddev_x: 0.071
       angular_velocity_stddev_y: 0.054
       angular_velocity_stddev_z: 0.038
-      angular_velocity_colored_noise: true
-      angular_velocity_noise_cutoff_hz: 10.0
-      angular_velocity_noise_lo_stddev_x: 0.044
-      angular_velocity_noise_lo_stddev_y: 0.040
-      angular_velocity_noise_lo_stddev_z: 0.024
-      angular_velocity_noise_hi_stddev_x: 0.055
-      angular_velocity_noise_hi_stddev_y: 0.036
-      angular_velocity_noise_hi_stddev_z: 0.029
+      angular_velocity_colored_noise: false
       apply_noise: true
       delay_ms: 0.0
       z_offset: 0.052

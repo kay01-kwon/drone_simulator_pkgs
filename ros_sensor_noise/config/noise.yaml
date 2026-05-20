@@ -12,21 +12,14 @@
       # angular_velocity_stddev: 0.000245  # Standard deviation for angular velocity noise in rad/s
       # apply_noise: true  # Flag to enable or disable noise application
       position_stddev: 0.005
-      angle_stddev: 0.003
-      axis_stddev: 0.05
+      angle_stddev: 0.005
+      axis_stddev: 0.005
       linear_velocity_stddev_x: 0.028
       linear_velocity_stddev_y: 0.022
       linear_velocity_stddev_z: 0.031
       angular_velocity_stddev_x: 0.071
       angular_velocity_stddev_y: 0.054
       angular_velocity_stddev_z: 0.038
-      angular_velocity_colored_noise: true
-      angular_velocity_noise_cutoff_hz: 10.0
-      angular_velocity_noise_lo_stddev_x: 0.044
-      angular_velocity_noise_lo_stddev_y: 0.040
-      angular_velocity_noise_lo_stddev_z: 0.024
-      angular_velocity_noise_hi_stddev_x: 0.055
-      angular_velocity_noise_hi_stddev_y: 0.036
-      angular_velocity_noise_hi_stddev_z: 0.029
+      angular_velocity_colored_noise: false
       apply_noise: true
       delay_ms: 25.0  # Pure delay in milliseconds (0.0 = no delay)
