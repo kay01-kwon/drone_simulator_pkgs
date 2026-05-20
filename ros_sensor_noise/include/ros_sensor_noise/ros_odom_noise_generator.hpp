@@ -30,17 +30,6 @@ struct NoiseParameters
     double angle_noise_stddev;
     double axis_noise_stddev[3];
     double angular_velocity_noise_stddev[3];
-
-    bool angular_velocity_colored{false};
-    double angular_velocity_cutoff_hz{10.0};
-    double angular_velocity_lo_stddev[3]{0.0, 0.0, 0.0};
-    double angular_velocity_hi_stddev[3]{0.0, 0.0, 0.0};
-};
-
-struct AxisColoredNoiseState
-{
-    double lpf_lo{0.0};
-    double lpf_hi{0.0};
 };
 
 class RosOdomNoiseGenerator
@@ -85,13 +74,6 @@ class RosOdomNoiseGenerator
     int64_t delay_ns_{0};
     std::deque<Odometry> noisy_odom_buffer_;
     static constexpr int64_t MAX_BUFFER_DURATION_NS = 500000000LL; // 500 ms
-
-    // Colored noise state (per axis: x, y, z)
-    AxisColoredNoiseState colored_state_[3];
-    double noise_alpha_{0.5};
-    double lo_raw_std_{1.0};
-    double hi_raw_std_{1.0};
-    std::normal_distribution<double> unit_dist_{0.0, 1.0};
 
 };
 

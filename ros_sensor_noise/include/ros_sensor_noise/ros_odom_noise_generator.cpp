@@ -22,16 +22,6 @@ RosOdomNoiseGenerator::RosOdomNoiseGenerator()
     node_->declare_parameter("noise.angular_velocity_stddev_z", 0.01);
     node_->declare_parameter("noise.apply_noise", true);
 
-    // Declare colored noise parameters
-    node_->declare_parameter("noise.angular_velocity_colored_noise", false);
-    node_->declare_parameter("noise.angular_velocity_noise_cutoff_hz", 10.0);
-    node_->declare_parameter("noise.angular_velocity_noise_lo_stddev_x", 0.0);
-    node_->declare_parameter("noise.angular_velocity_noise_lo_stddev_y", 0.0);
-    node_->declare_parameter("noise.angular_velocity_noise_lo_stddev_z", 0.0);
-    node_->declare_parameter("noise.angular_velocity_noise_hi_stddev_x", 0.0);
-    node_->declare_parameter("noise.angular_velocity_noise_hi_stddev_y", 0.0);
-    node_->declare_parameter("noise.angular_velocity_noise_hi_stddev_z", 0.0);
-
     // Declare delay parameter
     node_->declare_parameter("noise.delay_ms", 0.0);
 
@@ -58,24 +48,6 @@ RosOdomNoiseGenerator::RosOdomNoiseGenerator()
     noise_params_.angular_velocity_noise_stddev[2] = node_->get_parameter("noise.angular_velocity_stddev_z").as_double();
     noise_enabled_ = node_->get_parameter("noise.apply_noise").as_bool();
 
-    // Load colored noise parameters
-    noise_params_.angular_velocity_colored = node_->get_parameter("noise.angular_velocity_colored_noise").as_bool();
-    noise_params_.angular_velocity_cutoff_hz = node_->get_parameter("noise.angular_velocity_noise_cutoff_hz").as_double();
-    noise_params_.angular_velocity_lo_stddev[0] = node_->get_parameter("noise.angular_velocity_noise_lo_stddev_x").as_double();
-    noise_params_.angular_velocity_lo_stddev[1] = node_->get_parameter("noise.angular_velocity_noise_lo_stddev_y").as_double();
-    noise_params_.angular_velocity_lo_stddev[2] = node_->get_parameter("noise.angular_velocity_noise_lo_stddev_z").as_double();
-    noise_params_.angular_velocity_hi_stddev[0] = node_->get_parameter("noise.angular_velocity_noise_hi_stddev_x").as_double();
-    noise_params_.angular_velocity_hi_stddev[1] = node_->get_parameter("noise.angular_velocity_noise_hi_stddev_y").as_double();
-    noise_params_.angular_velocity_hi_stddev[2] = node_->get_parameter("noise.angular_velocity_noise_hi_stddev_z").as_double();
-
-    if (noise_params_.angular_velocity_colored) {
-        double fc = noise_params_.angular_velocity_cutoff_hz;
-        double fs = 100.0;
-        noise_alpha_ = std::exp(-2.0 * M_PI * fc / fs);
-        lo_raw_std_ = std::sqrt((1.0 - noise_alpha_) / (1.0 + noise_alpha_));
-        hi_raw_std_ = noise_alpha_ * std::sqrt(2.0 / (1.0 + noise_alpha_));
-    }
-
     // Load delay parameter
     delay_ms_ = node_->get_parameter("noise.delay_ms").as_double();
     delay_ns_ = static_cast<int64_t>(delay_ms_ * 1e6);
@@ -100,22 +72,6 @@ RosOdomNoiseGenerator::RosOdomNoiseGenerator()
         noise_params_.angular_velocity_noise_stddev[0],
         noise_params_.angular_velocity_noise_stddev[1],
         noise_params_.angular_velocity_noise_stddev[2]);
-    RCLCPP_INFO(node_->get_logger(), "Colored angular velocity noise: %s",
-        noise_params_.angular_velocity_colored ? "true" : "false");
-    if (noise_params_.angular_velocity_colored) {
-        RCLCPP_INFO(node_->get_logger(), "  Cutoff: %.1f Hz, alpha=%.4f",
-            noise_params_.angular_velocity_cutoff_hz, noise_alpha_);
-        RCLCPP_INFO(node_->get_logger(), "  Lo band (0-%.0f Hz) stddev: [%.4f, %.4f, %.4f]",
-            noise_params_.angular_velocity_cutoff_hz,
-            noise_params_.angular_velocity_lo_stddev[0],
-            noise_params_.angular_velocity_lo_stddev[1],
-            noise_params_.angular_velocity_lo_stddev[2]);
-        RCLCPP_INFO(node_->get_logger(), "  Hi band (%.0f-50 Hz) stddev: [%.4f, %.4f, %.4f]",
-            noise_params_.angular_velocity_cutoff_hz,
-            noise_params_.angular_velocity_hi_stddev[0],
-            noise_params_.angular_velocity_hi_stddev[1],
-            noise_params_.angular_velocity_hi_stddev[2]);
-    }
     RCLCPP_INFO(node_->get_logger(), "=== Delay Configuration ===");
     RCLCPP_INFO(node_->get_logger(), "Pure delay: %.1f ms", delay_ms_);
     RCLCPP_INFO(node_->get_logger(), "=== Offset Configuration ===");
@@ -313,34 +269,12 @@ Odometry RosOdomNoiseGenerator::applyNoise(const Odometry& odom)
     noisy_odom.pose.pose.orientation.z = noisy_quat.z();
 
     // Apply per-axis noise to angular velocity
-    if (noise_params_.angular_velocity_colored) {
-        double ang_noise[3];
-        for (int i = 0; i < 3; ++i) {
-            double w_lo = unit_dist_(gen_);
-            double w_hi = unit_dist_(gen_);
-
-            colored_state_[i].lpf_lo =
-                noise_alpha_ * colored_state_[i].lpf_lo + (1.0 - noise_alpha_) * w_lo;
-            double y_lo = colored_state_[i].lpf_lo;
-
-            colored_state_[i].lpf_hi =
-                noise_alpha_ * colored_state_[i].lpf_hi + (1.0 - noise_alpha_) * w_hi;
-            double y_hi = w_hi - colored_state_[i].lpf_hi;
-
-            ang_noise[i] = y_lo * (noise_params_.angular_velocity_lo_stddev[i] / lo_raw_std_)
-                         + y_hi * (noise_params_.angular_velocity_hi_stddev[i] / hi_raw_std_);
-        }
-        noisy_odom.twist.twist.angular.x += ang_noise[0];
-        noisy_odom.twist.twist.angular.y += ang_noise[1];
-        noisy_odom.twist.twist.angular.z += ang_noise[2];
-    } else {
-        std::normal_distribution<double> ang_vel_noise_x(0.0, noise_params_.angular_velocity_noise_stddev[0]);
-        std::normal_distribution<double> ang_vel_noise_y(0.0, noise_params_.angular_velocity_noise_stddev[1]);
-        std::normal_distribution<double> ang_vel_noise_z(0.0, noise_params_.angular_velocity_noise_stddev[2]);
-        noisy_odom.twist.twist.angular.x += ang_vel_noise_x(gen_);
-        noisy_odom.twist.twist.angular.y += ang_vel_noise_y(gen_);
-        noisy_odom.twist.twist.angular.z += ang_vel_noise_z(gen_);
-    }
+    std::normal_distribution<double> ang_vel_noise_x(0.0, noise_params_.angular_velocity_noise_stddev[0]);
+    std::normal_distribution<double> ang_vel_noise_y(0.0, noise_params_.angular_velocity_noise_stddev[1]);
+    std::normal_distribution<double> ang_vel_noise_z(0.0, noise_params_.angular_velocity_noise_stddev[2]);
+    noisy_odom.twist.twist.angular.x += ang_vel_noise_x(gen_);
+    noisy_odom.twist.twist.angular.y += ang_vel_noise_y(gen_);
+    noisy_odom.twist.twist.angular.z += ang_vel_noise_z(gen_);
 
     return noisy_odom;
 }
