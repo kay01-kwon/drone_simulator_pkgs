@@ -14,5 +14,5 @@
       angular_velocity_stddev_x: 0.071
       angular_velocity_stddev_y: 0.054
       angular_velocity_stddev_z: 0.038
-      apply_noise: true
+      apply_noise: false
       z_offset: 0.0
