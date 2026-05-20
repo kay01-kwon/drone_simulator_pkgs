@@ -143,7 +143,8 @@ RosOdomNoiseGenerator::~RosOdomNoiseGenerator()
 
 void RosOdomNoiseGenerator::odomCallback(const Odometry::SharedPtr msg)
 {
-    // Step 0: Apply position offset (base_link → imu_link in body frame, then rotate to world)
+    // Step 0: Apply position & velocity offset (base_link → imu_link)
+    //         Rigid body: v_P = v_O + ω × r, computed in world frame
     Odometry offset_odom = *msg;
     if (std::abs(z_offset_) > 1e-6) {
         Eigen::Quaterniond q(
@@ -156,6 +157,16 @@ void RosOdomNoiseGenerator::odomCallback(const Odometry::SharedPtr msg)
         offset_odom.pose.pose.position.x += offset_world.x();
         offset_odom.pose.pose.position.y += offset_world.y();
         offset_odom.pose.pose.position.z += offset_world.z();
+
+        Eigen::Vector3d omega_body(
+            msg->twist.twist.angular.x,
+            msg->twist.twist.angular.y,
+            msg->twist.twist.angular.z);
+        Eigen::Vector3d omega_world = q * omega_body;
+        Eigen::Vector3d dv_world = omega_world.cross(offset_world);
+        offset_odom.twist.twist.linear.x += dv_world.x();
+        offset_odom.twist.twist.linear.y += dv_world.y();
+        offset_odom.twist.twist.linear.z += dv_world.z();
     }
 
     // Step 1: Apply noise (or pass through)
