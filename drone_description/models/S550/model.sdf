@@ -797,8 +797,8 @@
         <momentConstant>0.01569</momentConstant>
         <commandSubTopic>gazebo/command/motor_speed</commandSubTopic>
         <motorNumber>0</motorNumber>
-        <rotorDragCoefficient>8.06428e-05</rotorDragCoefficient>
-        <rollingMomentCoefficient>1e-06</rollingMomentCoefficient>
+        <rotorDragCoefficient>0.0</rotorDragCoefficient>
+        <rollingMomentCoefficient>0.0</rollingMomentCoefficient>
         <rotorVelocitySlowdownSim>10</rotorVelocitySlowdownSim>
         <motorType>velocity</motorType>
       </plugin>
@@ -818,8 +818,8 @@
         <momentConstant>0.01569</momentConstant>
         <commandSubTopic>gazebo/command/motor_speed</commandSubTopic>
         <motorNumber>1</motorNumber>
-        <rotorDragCoefficient>8.06428e-05</rotorDragCoefficient>
-        <rollingMomentCoefficient>1e-06</rollingMomentCoefficient>
+        <rotorDragCoefficient>0.0</rotorDragCoefficient>
+        <rollingMomentCoefficient>0.0</rollingMomentCoefficient>
         <rotorVelocitySlowdownSim>10</rotorVelocitySlowdownSim>
         <motorType>velocity</motorType>
       </plugin>
@@ -839,8 +839,8 @@
         <momentConstant>0.01569</momentConstant>
         <commandSubTopic>gazebo/command/motor_speed</commandSubTopic>
         <motorNumber>2</motorNumber>
-        <rotorDragCoefficient>8.06428e-05</rotorDragCoefficient>
-        <rollingMomentCoefficient>1e-06</rollingMomentCoefficient>
+        <rotorDragCoefficient>0.0</rotorDragCoefficient>
+        <rollingMomentCoefficient>0.0</rollingMomentCoefficient>
         <rotorVelocitySlowdownSim>10</rotorVelocitySlowdownSim>
         <motorType>velocity</motorType>
       </plugin>
@@ -860,8 +860,8 @@
         <momentConstant>0.01569</momentConstant>
         <commandSubTopic>gazebo/command/motor_speed</commandSubTopic>
         <motorNumber>3</motorNumber>
-        <rotorDragCoefficient>8.06428e-05</rotorDragCoefficient>
-        <rollingMomentCoefficient>1e-06</rollingMomentCoefficient>
+        <rotorDragCoefficient>0.0</rotorDragCoefficient>
+        <rollingMomentCoefficient>0.0</rollingMomentCoefficient>
         <rotorVelocitySlowdownSim>10</rotorVelocitySlowdownSim>
         <motorType>velocity</motorType>
       </plugin>
@@ -881,8 +881,8 @@
         <momentConstant>0.01569</momentConstant>
         <commandSubTopic>gazebo/command/motor_speed</commandSubTopic>
         <motorNumber>4</motorNumber>
-        <rotorDragCoefficient>8.06428e-05</rotorDragCoefficient>
-        <rollingMomentCoefficient>1e-06</rollingMomentCoefficient>
+        <rotorDragCoefficient>0.0</rotorDragCoefficient>
+        <rollingMomentCoefficient>0.0</rollingMomentCoefficient>
         <rotorVelocitySlowdownSim>10</rotorVelocitySlowdownSim>
         <motorType>velocity</motorType>
       </plugin>
@@ -902,8 +902,8 @@
         <momentConstant>0.01569</momentConstant>
         <commandSubTopic>gazebo/command/motor_speed</commandSubTopic>
         <motorNumber>5</motorNumber>
-        <rotorDragCoefficient>8.06428e-05</rotorDragCoefficient>
-        <rollingMomentCoefficient>1e-06</rollingMomentCoefficient>
+        <rotorDragCoefficient>0.0</rotorDragCoefficient>
+        <rollingMomentCoefficient>0.0</rollingMomentCoefficient>
         <rotorVelocitySlowdownSim>10</rotorVelocitySlowdownSim>
         <motorType>velocity</motorType>
       </plugin>
@@ -933,9 +933,9 @@
         filename="AngularDamping"
         name="angular_damping::AngularDamping">
         <link_name>base_link</link_name>
-        <b_x>0.115</b_x>
-        <b_y>0.137</b_y>
-        <b_z>0.184</b_z>
+        <b_x>0.3</b_x>
+        <b_y>0.3</b_y>
+        <b_z>0.3</b_z>
       </plugin>
 
   </model>
