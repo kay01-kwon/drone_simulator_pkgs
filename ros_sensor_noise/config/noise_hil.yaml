@@ -2,7 +2,7 @@
   ros__parameters:
     topics:
       odom_input: "/S550/ground_truth/odom"
-      odom_output: "/S550/noisy_odom"
+      odom_output: "/mavros/local_position/odom"
       pose_output: "/mavros/vision_pose/pose"
     noise:
       position_stddev: 0.005
