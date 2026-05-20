@@ -27,6 +27,7 @@
       - imu
       - vision_pose
       - vision_speed
+      # - local_position
       - odometry
       - command
       - param
