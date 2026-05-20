@@ -20,6 +20,5 @@
       angular_velocity_stddev_x: 0.071
       angular_velocity_stddev_y: 0.054
       angular_velocity_stddev_z: 0.038
-      angular_velocity_colored_noise: false
       apply_noise: true
       delay_ms: 25.0  # Pure delay in milliseconds (0.0 = no delay)
