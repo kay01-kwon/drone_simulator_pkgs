@@ -61,7 +61,7 @@ print("Parsing 05-05 01_leveled_marker...")
 t_cmd, cmd = parse_topic(DB, '/uav/cmd_raw', '<6H', 18, 6)
 t_rpm, rpm = parse_topic(DB, '/uav/actual_rpm', '<6I', 20, 6)
 
-cmd_avg = np.mean(cmd, axis=1).astype(float)
+cmd_avg = np.mean(cmd, axis=1).astype(float) * (9800.0 / 8191.0)  # bits → RPM
 rpm_avg = np.mean(rpm, axis=1).astype(float)
 
 # Hover window
@@ -82,7 +82,7 @@ c_ac = c_u - np.mean(c_u)
 r_ac = r_u - np.mean(r_u)
 N = len(t_u)
 K_static = np.mean(r_u) / np.mean(c_u)
-print(f"  N={N}, fs={fs:.1f} Hz, K_static={K_static:.4f}")
+print(f"  N={N}, fs={fs:.1f} Hz, K_static={K_static:.4f} RPM/RPM")
 
 # ── CSD ──
 nperseg = 256
