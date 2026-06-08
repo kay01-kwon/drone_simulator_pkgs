@@ -86,7 +86,7 @@ fig.suptitle(r'$H_{rot}(s)$', fontsize=14, fontweight='bold')
 ax = axes[0]
 ax.semilogx(f_data, mag_db_data, 'ko', markersize=7, label='Measured')
 ax.semilogx(f_model, mag_fit, 'b-', linewidth=2.0,
-            label=rf'$\zeta={zeta:.4f},\;\omega_{{rot,n}}={wn:.2f}$ rad/s, $\tau_d={tau_d*1000:.2f}$ ms')
+            label='Identified rotor response')
 ax.axhline(y=-3.0, color='gray', ls='--', alpha=0.5, lw=0.8)
 ax.axvline(x=F_3DB, color='gray', ls='--', alpha=0.5, lw=0.8)
 ax.plot(F_3DB, -3.0, 'rx', ms=10, mew=2, label=f'$-3$ dB @ {F_3DB} Hz')
@@ -99,7 +99,7 @@ ax.set_ylim(-50, 5)
 # Phase
 ax = axes[1]
 ax.semilogx(f_data, phase_deg_data, 'ko', markersize=7, label='Measured')
-ax.semilogx(f_model, phase_fit, 'b-', linewidth=2.0, label='Fit')
+ax.semilogx(f_model, phase_fit, 'b-', linewidth=2.0, label='Identified rotor response')
 ax.axhline(y=-180, color='r', ls=':', alpha=0.5, lw=0.8)
 if f_180:
     ax.axvline(x=f_180, color='r', ls=':', alpha=0.5, lw=0.8)
