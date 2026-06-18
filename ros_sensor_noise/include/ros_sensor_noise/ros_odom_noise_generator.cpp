@@ -125,6 +125,21 @@ void RosOdomNoiseGenerator::odomCallback(const Odometry::SharedPtr msg)
         noisy_odom.header.stamp = node_->now();
     }
 
+    // Rotate linear velocity from world frame to body frame
+    Eigen::Quaterniond q_body(
+        noisy_odom.pose.pose.orientation.w,
+        noisy_odom.pose.pose.orientation.x,
+        noisy_odom.pose.pose.orientation.y,
+        noisy_odom.pose.pose.orientation.z);
+    Eigen::Vector3d v_world(
+        noisy_odom.twist.twist.linear.x,
+        noisy_odom.twist.twist.linear.y,
+        noisy_odom.twist.twist.linear.z);
+    Eigen::Vector3d v_body = q_body.inverse() * v_world;
+    noisy_odom.twist.twist.linear.x = v_body.x();
+    noisy_odom.twist.twist.linear.y = v_body.y();
+    noisy_odom.twist.twist.linear.z = v_body.z();
+
     noisy_odom_pub_->publish(noisy_odom);
 
     PoseStamped pose;
