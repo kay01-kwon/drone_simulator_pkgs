@@ -5,13 +5,15 @@ This package provides noise injection for odometry sensor data in ROS 2.
 ## Features
 
 - **Position Noise**: Gaussian noise injection for x, y, z position
-- **Linear Velocity Noise**: Gaussian noise for linear velocity components
+- **Linear Velocity Noise**: Per-axis Gaussian noise for linear velocity (x, y, z)
 - **Quaternion Noise**: Noise injection using angle-axis representation
   - Converts quaternion to angle-axis
   - Injects noise into angle and axis components
   - Normalizes the axis vector
   - Converts back to quaternion
-- **Angular Velocity Noise**: Gaussian noise for angular velocity components
+- **Angular Velocity Noise**: Per-axis Gaussian noise for angular velocity (x, y, z)
+- **Z Offset**: Rigid-body position and velocity offset from base_link to sensor (e.g., IMU) link
+- **Body Frame Velocity**: Linear velocity is rotated from world frame to body frame before publishing
 
 ## Usage
 
@@ -35,41 +37,67 @@ Edit `config/noise.yaml` to adjust topic names and noise parameters:
 /**:
   ros__parameters:
     topics:
-      odom_input: "odom"            # Input odometry topic
-      odom_output: "noisy_odom"     # Output odometry topic with noise
-      pose_output: "noisy_pose"     # Output pose topic with noise
+      odom_input: "/S550/ground_truth/odom"
+      odom_output: "/mavros/local_position/odom"
+      pose_output: "/S550/pose"
     noise:
-      position_stddev: 0.002        # Position noise (meters)
-      angle_stddev: 0.01            # Angle noise (radians)
-      axis_stddev: 0.005            # Axis noise (radians)
-      linear_velocity_stddev: 0.01  # Linear velocity noise (m/s)
-      angular_velocity_stddev: 0.01 # Angular velocity noise (rad/s)
-      apply_noise: true             # Enable/disable noise
+      position_stddev: 0.005
+      angle_stddev: 0.005
+      axis_stddev: 0.005
+      linear_velocity_stddev_x: 0.028
+      linear_velocity_stddev_y: 0.022
+      linear_velocity_stddev_z: 0.031
+      angular_velocity_stddev_x: 0.071
+      angular_velocity_stddev_y: 0.054
+      angular_velocity_stddev_z: 0.038
+      apply_noise: true
+      z_offset: 0.0
 ```
+
+### Parameter Description
+
+| Parameter | Description |
+|-----------|-------------|
+| `position_stddev` | Standard deviation for position noise (meters) |
+| `angle_stddev` | Standard deviation for angle noise (radians) |
+| `axis_stddev` | Standard deviation for rotation axis noise |
+| `linear_velocity_stddev_{x,y,z}` | Per-axis standard deviation for linear velocity noise (m/s) |
+| `angular_velocity_stddev_{x,y,z}` | Per-axis standard deviation for angular velocity noise (rad/s) |
+| `apply_noise` | Enable/disable noise injection |
+| `z_offset` | Vertical offset from base_link to sensor link (meters) |
 
 ## Topics
 
 All topic names are configurable via the yaml file.
 
 ### Subscribed Topics
-- `/odom` (nav_msgs/Odometry): Input odometry data (configurable via `topics.odom_input`)
+- Input odometry topic (nav_msgs/Odometry): configurable via `topics.odom_input`
 
 ### Published Topics
-- `/noisy_odom` (nav_msgs/Odometry): Odometry data with noise injected (configurable via `topics.odom_output`)
-- `/noisy_pose` (geometry_msgs/PoseStamped): Pose data with noise injected (configurable via `topics.pose_output`)
+- Noisy odometry topic (nav_msgs/Odometry): configurable via `topics.odom_output`
+  - Linear velocity is published in **body frame** ($v_{body} = q^{-1} \cdot v_{world}$)
+- Noisy pose topic (geometry_msgs/PoseStamped): configurable via `topics.pose_output`
 
 ## Implementation Details
 
+### Z Offset (Rigid-Body Transform)
+
+When `z_offset` is nonzero, the node applies a rigid-body transform from `base_link` to the sensor link:
+- Position: $p_{sensor} = p_{base} + q \cdot [0, 0, z_{offset}]^T$
+- Velocity: $v_{sensor} = v_{base} + \omega_{world} \times r_{world}$ where $r_{world} = q \cdot [0, 0, z_{offset}]^T$
+
 ### Quaternion Noise Injection
 
-The quaternion noise injection follows these steps:
-1. Convert quaternion to Eigen quaternion
-2. Convert to angle-axis representation
-3. Apply Gaussian noise to the angle
-4. Apply Gaussian noise to each axis component
-5. Normalize the axis vector
-6. Create new angle-axis with noisy values
-7. Convert back to quaternion
-8. Publish the noisy quaternion
+1. Convert quaternion to angle-axis representation
+2. Apply Gaussian noise to the angle
+3. Apply Gaussian noise to each axis component
+4. Normalize the axis vector
+5. Convert back to quaternion
 
-This ensures that the resulting quaternion is still valid and normalized.
+### Body Frame Velocity
+
+After noise injection, linear velocity is rotated from world frame to body frame:
+
+$$v_{body} = q^{-1} \cdot v_{world}$$
+
+This matches the convention expected by MAVROS (`/mavros/local_position/odom`).

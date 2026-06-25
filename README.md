@@ -1,13 +1,15 @@
 # drone_simulator_pkgs
 
-## 1. Install gazebo fortress
+S550 hexacopter simulator with second-order motor model and sensor noise injection.
+
+## 1. Install Gazebo Fortress
 
 Go to the following site, and then, install it.
 ```
 https://gazebosim.org/docs/fortress/install_ubuntu/
 ```
 
-## 2. Install dependent pkgs
+## 2. Install dependent packages
 
 ```
 sudo apt install ros-humble-ros-gz*
@@ -18,9 +20,9 @@ Go to the repo and build ros2_libcanard first.
 https://github.com/kay01-kwon/ros2_libcanard_pkgs
 ```
 
-ros_motor_model pkg depends on the message type named "ros2_libcanrad_msgs".
+ros_motor_model pkg depends on the message type named "ros2_libcanard_msgs".
 
-## 3. Install this packages.
+## 3. Install this packages
 
 ```
 mkdir -p ~/rotor_sim_ws/src
@@ -39,7 +41,7 @@ cd ~/rotor_sim_ws/
 ```
 
 ```
-colcon build --packages-select drone_description drone_gazebo drone_bringup ros_motor_model --symlink-install
+colcon build --packages-select drone_description drone_gazebo drone_bringup ros_motor_model ros_sensor_noise --symlink-install
 ```
 
 ## 4. Launch
@@ -49,7 +51,7 @@ source install/setup.bash
 ```
 
 ```
-ros2 launch drone_bringup s550_empty.launch.py
+ros2 launch drone_bringup s550_empty_second_order.launch.py
 ```
 
 ## 5. Reset pose of model
@@ -62,14 +64,27 @@ ign service -s /world/S550_world/set_pose --reqtype ignition.msgs.Pose --reptype
 
 $C_{T,rps}$ (unit: $\frac{N}{(rad/s)^2}$)
 
-Experiment $C_{T,rpm} = 1.386 \cdot 10^{-7} \frac{N}{(rpm)^2}$
+Experiment $C_{T,rpm} = 1.3175 \cdot 10^{-7} \frac{N}{(rpm)^2}$
 
 Conversion
 
 $C_{T,rps} = C_{T,rpm}\cdot (\frac{60}{2\pi})^2$
 
-$ \therefore C_{T,rps} = 1.2639\cdot 10^{-5} \frac{N}{(rad/s)^2}$
+$ \therefore C_{T,rps} = 1.20142\cdot 10^{-5} \frac{N}{(rad/s)^2}$
 
 <img src="figure/02_thrust_timeseries.png">
 
 <img src="figure/03_rpm_vs_thrust.png">
+
+## 7. Motor transfer function
+
+$$H_{rot}(s) = \frac{\omega_{rot,n}^2}{s^2 + 2\zeta\,\omega_{rot,n}\,s + \omega_{rot,n}^2}\,e^{-\tau_d s}$$
+
+| Parameter | Value |
+|-----------|-------|
+| $\zeta$ | 0.7814 |
+| $\omega_{rot,n}$ | 21.74 rad/s (3.46 Hz) |
+| $\tau_d$ | 15.67 ms |
+| $f_{-3\text{dB}}$ | 3.1 Hz |
+
+<img src="data_set/trained_models/motor_tf_bode_comparison.png" width="600">
