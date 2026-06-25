@@ -70,7 +70,7 @@ Conversion
 
 $C_{T,rps} = C_{T,rpm}\cdot (\frac{60}{2\pi})^2$
 
-$ \therefore C_{T,rps} = 1.20142\cdot 10^{-5} \frac{N}{(rad/s)^2}$
+$C_{T,rps} = 1.20142\cdot 10^{-5} \frac{N}{(rad/s)^2}$
 
 <img src="figure/02_thrust_timeseries.png">
 
