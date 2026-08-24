@@ -19,6 +19,10 @@ RosSecondOrderMotorModelNode::RosSecondOrderMotorModelNode() : Node("ros_second_
     this->declare_parameter<std::string>("motor.uav_type", "HEXA");
     std::string uav_type_str = this->get_parameter("motor.uav_type").as_string();
 
+    // Passthrough: bypass 2nd-order + delay dynamics
+    this->declare_parameter<bool>("motor.passthrough", false);
+    passthrough_ = this->get_parameter("motor.passthrough").as_bool();
+
     this->declare_parameter<double>("motor.alpha_max", motor_params.alpha_max);
     this->declare_parameter<double>("motor.p1", motor_params.p1);
     this->declare_parameter<double>("motor.p2", motor_params.p2);
@@ -99,7 +103,11 @@ RosSecondOrderMotorModelNode::RosSecondOrderMotorModelNode() : Node("ros_second_
         throw std::runtime_error("Unsupported UAV type");
     }
 
-    if (motor_params.pure) {
+    if (passthrough_) {
+        RCLCPP_INFO(this->get_logger(),
+                    "Passthrough Mode: cmd_rpm forwarded directly to Gazebo "
+                    "(2nd-order dynamics and delay bypassed)");
+    } else if (motor_params.pure) {
         RCLCPP_INFO(this->get_logger(),
                     "Pure 2nd Order Mode: zeta=%.4f, omega_n=%.4f rad/s, delay=%.2f ms",
                     motor_params.zeta,
@@ -174,8 +182,12 @@ void RosSecondOrderMotorModelNode::publish_motor_velocity()
 
                 double actual_rpm;
 
-                motor_models_.at(i)->set_state(cmd_rpm, time_curr_);
-                motor_models_.at(i)->get_state(actual_rpm);
+                if (passthrough_) {
+                    actual_rpm = cmd_rpm;
+                } else {
+                    motor_models_.at(i)->set_state(cmd_rpm, time_curr_);
+                    motor_models_.at(i)->get_state(actual_rpm);
+                }
 
                 // Gazebo ROS interface expects rad/s
                 actuators_msg_.velocity.at(i) = actual_rpm * RPM_TO_RPS;
@@ -209,8 +221,12 @@ void RosSecondOrderMotorModelNode::publish_motor_velocity()
 
                 double actual_rpm;
 
-                motor_models_.at(i)->set_state(cmd_rpm, time_curr_);
-                motor_models_.at(i)->get_state(actual_rpm);
+                if (passthrough_) {
+                    actual_rpm = cmd_rpm;
+                } else {
+                    motor_models_.at(i)->set_state(cmd_rpm, time_curr_);
+                    motor_models_.at(i)->get_state(actual_rpm);
+                }
 
                 // Gazebo ROS interface expects rad/s
                 actuators_msg_.velocity.at(i) = actual_rpm * RPM_TO_RPS;
