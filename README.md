@@ -50,9 +50,20 @@ colcon build --packages-select drone_description drone_gazebo drone_bringup ros_
 source install/setup.bash
 ```
 
+**Second-order rotor dynamics + delay (default):**
 ```
 ros2 launch drone_bringup s550_empty_second_order.launch.py
 ```
+
+**Passthrough mode (cmd_rpm forwarded directly to Gazebo, no dynamics/delay):**
+```
+ros2 launch drone_bringup s550_empty_passthrough.launch.py
+```
+
+Use the passthrough launch to compare the plant response with vs. without
+the identified rotor dynamics ($H_{rot}(s)$ described in Section 7).
+Both launches share identical Gazebo world, sensor noise, and command
+topics — only the motor stage differs.
 
 ## 5. Reset pose of model
 

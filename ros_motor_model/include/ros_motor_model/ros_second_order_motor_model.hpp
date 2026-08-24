@@ -75,6 +75,11 @@ class RosSecondOrderMotorModelNode : public rclcpp::Node
 
     bool cmd_raw_received_{false};
 
+    // Passthrough mode: bypass 2nd-order dynamics and delay, feed cmd_rpm
+    // directly to Gazebo. Used to compare the plant response with vs. without
+    // the identified rotor dynamics.
+    bool passthrough_{false};
+
     // Noise parameters
     bool noise_enabled_{false};
     double noise_mean_{0.0};

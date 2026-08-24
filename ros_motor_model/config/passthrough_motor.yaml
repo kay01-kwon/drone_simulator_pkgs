@@ -2,7 +2,7 @@
   ros__parameters:
     motor:
       uav_type: "HEXA"
-      passthrough: false
+      passthrough: true
       pure: true
       zeta: 0.7814
       omega_n: 21.74
@@ -13,6 +13,6 @@
       alpha_max: 15000.0
       jerk_max: 150000.0
       noise:
-        enabled: true
+        enabled: false
         mean: 0.0
-        std_dev: 15.0
+        std_dev: 0.0
