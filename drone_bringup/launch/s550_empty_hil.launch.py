@@ -6,6 +6,7 @@ from launch import LaunchDescription
 
 from launch.actions import DeclareLaunchArgument
 from launch.actions import IncludeLaunchDescription
+from launch.actions import LogInfo
 
 from launch.conditions import IfCondition
 
@@ -13,6 +14,7 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 
 from launch.substitutions import LaunchConfiguration
 from launch.substitutions import PathJoinSubstitution
+from launch.substitutions import PythonExpression
 
 from launch_ros.actions import Node
 
@@ -29,8 +31,6 @@ def generate_launch_description():
     sdf_file = os.path.join(pkg_prj_description, 'models', 'S550', 'model.sdf')
     mavros_config = os.path.join(pkg_prj_bringup, 'config', 'hil_mavros.yaml')
     noise_config = os.path.join(pkg_ros_sensor_noise, 'config', 'noise_hil.yaml')
-    ros_second_order_motor_model_config = os.path.join(
-        pkg_ros_motor_model, 'config', 'second_order_motor.yaml')
 
     with open(sdf_file, 'r') as infp:
         robot_desc = infp.read()
@@ -39,6 +39,30 @@ def generate_launch_description():
     rviz_arg = DeclareLaunchArgument(
         'rviz', default_value='true',
         description='Open RViz2.'
+    )
+
+    # motor_mode:=second_order  → identified 2nd-order rotor dynamics + delay
+    # motor_mode:=passthrough   → cmd_rpm forwarded directly to Gazebo
+    motor_mode_arg = DeclareLaunchArgument(
+        'motor_mode', default_value='second_order',
+        choices=['second_order', 'passthrough'],
+        description='Motor stage: second_order (H_rot(s) applied) or '
+                    'passthrough (ideal actuator, no dynamics/delay).'
+    )
+
+    # Resolve motor config file from motor_mode
+    motor_config = PathJoinSubstitution([
+        pkg_ros_motor_model, 'config',
+        PythonExpression([
+            "'passthrough_motor.yaml' if '",
+            LaunchConfiguration('motor_mode'),
+            "' == 'passthrough' else 'second_order_motor.yaml'"
+        ])
+    ])
+
+    log_motor_mode = LogInfo(
+        msg=['[s550_empty_hil] motor_mode = ',
+             LaunchConfiguration('motor_mode')]
     )
 
     # --- Gazebo Sim ---
@@ -104,14 +128,14 @@ def generate_launch_description():
         ]
     )
 
-    # --- ros_motor_model (second order) ---
+    # --- ros_motor_model (config chosen by motor_mode argument) ---
     # /uav/cmd_raw → motor model → /uav/actual_rpm + Gazebo motors
-    ros_second_order_motor_model = Node(
+    ros_motor_model = Node(
         package='ros_motor_model',
         executable='ros_second_order_motor_model',
         output='screen',
         parameters=[{'use_sim_time': False},
-                    ros_second_order_motor_model_config
+                    motor_config
                     ]
     )
 
@@ -164,6 +188,8 @@ def generate_launch_description():
 
     return LaunchDescription([
         rviz_arg,
+        motor_mode_arg,
+        log_motor_mode,
         gz_sim,
         bridge,
         infra1_bridge,
@@ -171,7 +197,7 @@ def generate_launch_description():
         depth_bridge,
         robot_state_publisher,
         rviz,
-        ros_second_order_motor_model,
+        ros_motor_model,
         gz_hil_bridge,
         ros_odom_noise,
         mavros_node,

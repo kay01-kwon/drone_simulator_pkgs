@@ -50,20 +50,34 @@ colcon build --packages-select drone_description drone_gazebo drone_bringup ros_
 source install/setup.bash
 ```
 
-**Second-order rotor dynamics + delay (default):**
+**Standalone (manual `/uav/cmd_raw` publisher):**
 ```
 ros2 launch drone_bringup s550_empty_second_order.launch.py
 ```
 
-**Passthrough mode (cmd_rpm forwarded directly to Gazebo, no dynamics/delay):**
+**HIL with RC via MAVROS (`/uav/cmd_raw` from PX4 board over CAN):**
 ```
-ros2 launch drone_bringup s550_empty_passthrough.launch.py
+ros2 launch drone_bringup s550_empty_hil.launch.py
 ```
 
-Use the passthrough launch to compare the plant response with vs. without
-the identified rotor dynamics ($H_{rot}(s)$ described in Section 7).
-Both launches share identical Gazebo world, sensor noise, and command
-topics — only the motor stage differs.
+### Motor stage: passthrough vs. 2nd-order dynamics
+
+Both launches accept a `motor_mode` argument to switch the motor stage on
+the fly, so the same RC input can be replayed against either plant:
+
+| `motor_mode` | Behavior |
+|--------------|----------|
+| `second_order` (default) | Applies the identified $H_{rot}(s)$ + delay |
+| `passthrough` | Forwards `cmd_rpm` directly to Gazebo (ideal actuator) |
+
+```
+ros2 launch drone_bringup s550_empty_hil.launch.py motor_mode:=passthrough
+ros2 launch drone_bringup s550_empty_hil.launch.py motor_mode:=second_order
+```
+
+Use `passthrough` to compare the plant response with vs. without the
+identified rotor dynamics — only the motor stage differs, everything else
+(world, sensor noise, RC path, MAVROS/PX4 loop) is identical.
 
 ## 5. Reset pose of model
 
